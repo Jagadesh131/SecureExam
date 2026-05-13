@@ -1,0 +1,1 @@
+﻿import React from \react\; import FacultySubScreen from \../../components/FacultySubScreen\; export default function Settings() { return ( <FacultySubScreen title=\Settings\ icon=\cog-outline\ /> ); }

@@ -1,0 +1,17 @@
+{
+    "name": "MCQ University Portal",
+    "short_name": "MCQ Portal",
+    "description": "Professional MCQ Examination System for University Faculty and Students.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#6366f1",
+    "icons": [
+        {
+            "src": "/static/images/pwa-icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

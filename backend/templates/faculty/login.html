@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Login | SecureExam{% endblock %}
+
+{% block content %}
+<div class="animate" style="width: 100%; max-width: 420px;">
+    <div class="login-header">
+        <a href="{{ url_for('welcome') }}" class="back-link">
+            <i class="fas fa-chevron-left"></i> Back
+        </a>
+    </div>
+
+    <div class="card" style="position: relative; padding-top: 3rem;">
+        <div class="auth-avatar" style="background: none; padding: 0;">
+            <img src="{{ url_for('static', filename='img/faculty_avatar.png') }}" style="width: 100%; height: 100%; border-radius: 50%;" alt="Faculty">
+        </div>
+
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 0.25rem; font-weight: 800;">Faculty Login</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to manage your exams</p>
+        </div>
+
+        <form action="{{ url_for('faculty.authenticate') }}" method="POST">
+            <div class="form-group">
+                <label for="faculty_id">Faculty ID</label>
+                <input type="text" id="faculty_id" name="faculty_id" placeholder="Enter your Faculty ID" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <i class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer;" onclick="togglePassword()"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem; margin-bottom: 1.5rem;">Login</button>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.85rem;">
+                <a href="{{ url_for('faculty.forgot_password') }}" style="color: #6366F1; font-weight: 600;">Forgot Password?</a>
+                <a href="{{ url_for('faculty.signup') }}" style="color: #6366F1; font-weight: 600;">New Faculty? Sign Up</a>
+            </div>
+        </form>
+
+        <div class="demo-credentials" style="cursor: pointer;" onclick="document.getElementById('faculty_id').value='FAC001'; document.getElementById('password').value='password123';">
+            <p>Demo Credentials (Tap to fill):</p>
+            <div class="cred-row">ID: FAC001</div>
+            <div class="cred-row">Password: password123</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const pwd = document.getElementById('password');
+    const icon = event.target;
+    if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        pwd.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
+{% endblock %}

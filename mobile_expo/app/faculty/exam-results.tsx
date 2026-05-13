@@ -1,0 +1,1 @@
+﻿import React from \react\; import FacultySubScreen from \../../components/FacultySubScreen\; export default function ExamResults() { return ( <FacultySubScreen title=\Exam Results\ icon=\poll\ /> ); }

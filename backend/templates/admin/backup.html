@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}System Vault — SECURE ADMIN{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="background: #F8FAFC; min-height: 100vh;">
+    <!-- Premium Navbar -->
+    <nav class="navbar" style="background: #000; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="navbar-brand" style="color: white; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-shield-halved" style="color: #FF3333;"></i>
+            SECURE ADMIN
+        </div>
+        <div class="navbar-links" style="display: flex; gap: 20px; align-items: center;">
+            <a href="{{ url_for('admin.dashboard') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Dashboard</a>
+            <a href="{{ url_for('admin.faculty_list') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Faculty</a>
+            <a href="{{ url_for('admin.exams') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Exams</a>
+            <a href="{{ url_for('admin.attempts') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Attempts</a>
+            <a href="{{ url_for('admin.backup') }}" style="color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Maintenance</a>
+            <a href="{{ url_for('admin.logout') }}" style="background: rgba(239, 68, 68, 0.1); color: #EF4444; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="padding: 4rem 2rem;">
+        <div class="container" style="max-width: 900px; margin: 0 auto;">
+            <!-- Vault Integrity Header -->
+            <div style="background: #0F172A; padding: 2.5rem; border-radius: 32px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: center; color: white;">
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.05); border-radius: 18px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem;">
+                        <i class="fas fa-vault" style="color: #6366F1;"></i>
+                    </div>
+                    <div>
+                        <h1 style="font-size: 1.5rem; font-weight: 900;">System Vault</h1>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #94A3B8; font-weight: 700; margin-top: 4px;">
+                            <span style="width: 6px; height: 6px; background: #10B981; border-radius: 50%;"></span>
+                            DATABASE INTEGRITY SECURE
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.7rem; font-weight: 900; color: #64748B; text-transform: uppercase;">Storage Health</div>
+                    <div style="font-size: 1.25rem; font-weight: 900;">NOMINAL</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;">
+                <!-- Snapshot Column -->
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 900; color: #0F172A; margin-bottom: 1.5rem;">Data Snapshots</h3>
+                    <div style="background: white; padding: 2.5rem; border-radius: 32px; border: 1px solid #E2E8F0; text-align: center;">
+                        <div style="width: 64px; height: 64px; background: #F8FAFC; color: #6366F1; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-file-export"></i>
+                        </div>
+                        <h4 style="font-weight: 900; color: #1E293B; margin-bottom: 0.5rem;">Full Snapshot</h4>
+                        <p style="font-size: 0.8rem; color: #64748B; font-weight: 500; line-height: 1.6; margin-bottom: 2rem;">Generate and download a complete copy of the SQL database for local storage.</p>
+                        <form action="{{ url_for('admin.backup') }}" method="GET">
+                            <button type="submit" style="width: 100%; background: #111; color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; cursor: pointer; transition: all 0.2s;">DOWNLOAD .DB FILE</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Danger Zone Column -->
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 900; color: #EF4444; margin-bottom: 1.5rem;">The Danger Zone</h3>
+                    <div style="background: #FEF2F2; padding: 2.5rem; border-radius: 32px; border: 1px solid #FECDD3;">
+                        <div style="display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 2rem;">
+                            <i class="fas fa-biohazard" style="color: #E11D48; font-size: 1.5rem;"></i>
+                            <div>
+                                <h4 style="font-weight: 900; color: #991B1B; margin-bottom: 4px;">Nuclear Wipe</h4>
+                                <p style="font-size: 0.75rem; color: #B91C1C; font-weight: 600; line-height: 1.5;">Destroy all data records permanently. This is irreversible.</p>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('admin.wipe_system') }}" onsubmit="return confirm('WARNING: DATA DESTRUCTION IS IRREVERSIBLE.')">
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; font-size: 0.7rem; font-weight: 800; color: #991B1B; margin-bottom: 0.5rem; text-transform: uppercase;">Type WIPE_ALL_DATA to confirm</label>
+                                <input type="text" name="confirm_text" placeholder="············" required style="width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #FECDD3; background: white; font-family: monospace; font-weight: 900; text-align: center; color: #E11D48;">
+                            </div>
+                            <button type="submit" style="width: 100%; background: #E11D48; color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(225,29,72,0.2);">EXECUTE WIPE</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

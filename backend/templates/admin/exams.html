@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Exam Oversight — SECURE ADMIN{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="background: #F8FAFC; min-height: 100vh;">
+    <!-- Premium Navbar -->
+    <nav class="navbar" style="background: #000; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="navbar-brand" style="color: white; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-shield-halved" style="color: #FF3333;"></i>
+            SECURE ADMIN
+        </div>
+        <div class="navbar-links" style="display: flex; gap: 20px; align-items: center;">
+            <a href="{{ url_for('admin.dashboard') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Dashboard</a>
+            <a href="{{ url_for('admin.faculty_list') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Faculty</a>
+            <a href="{{ url_for('admin.exams') }}" style="color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Exams</a>
+            <a href="{{ url_for('admin.attempts') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Attempts</a>
+            <a href="{{ url_for('admin.analytics') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Analytics</a>
+            <a href="{{ url_for('admin.logout') }}" style="background: rgba(239, 68, 68, 0.1); color: #EF4444; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="padding: 3rem 2rem;">
+        <div class="container" style="max-width: none; width: 100%;">
+            <!-- Header & Search -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+                <div>
+                    <h1 style="font-size: 2.25rem; font-weight: 900; color: #0F172A; margin-bottom: 0.5rem;">Exam Oversight</h1>
+                    {% if search %}
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
+                            <span style="background: #111; color: white; padding: 4px 12px; border-radius: 8px; font-weight: 800; font-size: 0.65rem; letter-spacing: 1px;">DEPARTMENTAL OVERVIEW</span>
+                            <span style="color: #6366F1; font-weight: 900; font-size: 1.1rem;">"{{ search|upper }}"</span>
+                            <a href="{{ url_for('admin.exams') }}" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; text-decoration: none; margin-left: 10px; border-bottom: 1px solid #EF444450;">[ RESET FILTERS ]</a>
+                        </div>
+                    {% else %}
+                        <p style="color: #64748B; font-weight: 500;">Monitor system-wide examination health and security status.</p>
+                    {% endif %}
+                </div>
+                <form method="GET" style="position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94A3B8;"></i>
+                    <input type="text" name="search" placeholder="Search by Code, Subject, or Department..." value="{{ search }}" style="padding: 14px 20px 14px 50px; border-radius: 16px; border: 1px solid #E2E8F0; width: 420px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); outline: none;" onfocus="this.style.borderColor='#FF3333'">
+                </form>
+            </div>
+
+            {% if not exams %}
+            <div style="padding: 8rem 2rem; text-align: center; background: white; border-radius: 32px; border: 1px dashed #E2E8F0;">
+                {% if not search %}
+                    <div style="width: 80px; height: 80px; background: #EEF2FF; color: #6366F1; border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 2rem; font-size: 2rem;">
+                        <i class="fas fa-radar"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; font-weight: 900; color: #0F172A; margin-bottom: 0.5rem;">System Standby</h3>
+                    <p style="color: #64748B; font-weight: 500;">Enter a Department or Exam Code to begin system-wide oversight.</p>
+                {% else %}
+                    <div style="width: 80px; height: 80px; background: #F1F5F9; color: #94A3B8; border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 2rem; font-size: 2rem;">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; font-weight: 900; color: #0F172A; margin-bottom: 0.5rem;">No Exams Located</h3>
+                    <p style="color: #64748B; font-weight: 500;">No examinations match your query "{{ search }}".</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- Oversight Stats -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 3rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 44px; height: 44px; background: #EEF2FF; color: #6366F1; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;"><i class="fas fa-file-invoice"></i></div>
+                    <div><div style="font-size: 1.25rem; font-weight: 900;">{{ exams|length }}</div><div style="font-size: 0.75rem; color: #64748B; font-weight: 700;">TOTAL EXAMS</div></div>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 44px; height: 44px; background: #ECFDF5; color: #10B981; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;"><i class="fas fa-satellite-dish"></i></div>
+                    <div><div style="font-size: 1.25rem; font-weight: 900;">{{ exams|selectattr('is_active', 'equalto', 1)|list|length }}</div><div style="font-size: 0.75rem; color: #64748B; font-weight: 700;">CURRENTLY LIVE</div></div>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 44px; height: 44px; background: #FFF7ED; color: #F59E0B; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;"><i class="fas fa-users-viewfinder"></i></div>
+                    <div><div style="font-size: 1.25rem; font-weight: 900;">{{ exams|sum(attribute='attempt_count') }}</div><div style="font-size: 0.75rem; color: #64748B; font-weight: 700;">STUDENT ENTRIES</div></div>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 44px; height: 44px; background: #F8FAFC; color: #111; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;"><i class="fas fa-shield-check"></i></div>
+                    <div><div style="font-size: 1.25rem; font-weight: 900;">SECURE</div><div style="font-size: 0.75rem; color: #64748B; font-weight: 700;">SYSTEM STATUS</div></div>
+                </div>
+            </div>
+
+            <!-- Exam Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 2rem;">
+                {% for e in exams %}
+                <div style="background: white; border-radius: 32px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="padding: 2.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: 900; color: #6366F1; background: #EEF2FF; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;">{{ e.subject }}</span>
+                                <h3 style="font-size: 1.5rem; font-weight: 900; color: #0F172A; margin-top: 10px; letter-spacing: -0.5px;">{{ e.exam_name }}</h3>
+                                <p style="font-size: 0.85rem; color: #64748B; font-weight: 600; margin-top: 4px;">TERMINAL ID: <span style="color: #111;">{{ e.exam_code }}</span></p>
+                            </div>
+                            {% if e.is_active %}
+                                <div style="display: flex; align-items: center; gap: 8px; background: #DCFCE7; color: #15803D; padding: 8px 16px; border-radius: 14px; font-size: 0.75rem; font-weight: 900;">
+                                    <span style="width: 8px; height: 8px; background: #15803D; border-radius: 50%; animation: pulse 1.5s infinite;"></span>
+                                    LIVE
+                                </div>
+                            {% else %}
+                                <div style="background: #F1F5F9; color: #64748B; padding: 8px 16px; border-radius: 14px; font-size: 0.75rem; font-weight: 900;">
+                                    OFFLINE
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="background: #F8FAFC; padding: 1.5rem; border-radius: 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; border: 1px solid #F1F5F9;">
+                            <div>
+                                <div style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">In-Charge</div>
+                                <div style="font-size: 1rem; font-weight: 800; color: #1E293B;">{{ e.faculty_name }}</div>
+                                {% set dept = e.faculty_dept|upper or 'GENERAL' %}
+                                {% set badge_color = 
+                                    '#6366F1' if 'CSE' in dept or 'COMPUTER' in dept else 
+                                    '#10B981' if 'EEE' in dept or 'ECE' in dept or 'ELECT' in dept else 
+                                    '#F59E0B' if 'PHYSICS' in dept or 'MECH' in dept else 
+                                    '#EC4899' if 'CHEMISTRY' in dept or 'BIO' in dept else 
+                                    '#8B5CF6' if 'MATH' in dept or 'IT' in dept else 
+                                    '#06B6D4' if 'CIVIL' in dept or 'ARCH' in dept else 
+                                    '#F43F5E' if 'MBA' in dept or 'MGMT' in dept else '#64748B' 
+                                %}
+                                <div style="font-size: 0.75rem; font-weight: 900; color: {{ badge_color }}; margin-top: 4px;">{{ dept }}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Traffic</div>
+                                <div style="font-size: 1rem; font-weight: 800; color: #6366F1;">{{ e.attempt_count }} Entries</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <form method="POST" action="{{ url_for('admin.toggle_exam', exam_code=e.exam_code) }}" style="flex: 2;">
+                                <button type="submit" style="width: 100%; padding: 16px; border-radius: 18px; background: {% if e.is_active %}#111{% else %}#6366F1{% endif %}; color: white; border: none; font-weight: 900; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">
+                                    {% if e.is_active %}DEACTIVATE SESSION{% else %}INITIALIZE SESSION{% endif %}
+                                </button>
+                            </form>
+                            <a href="#" style="width: 56px; height: 56px; background: #F1F5F9; color: #475569; border-radius: 18px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 1.25rem;">
+                                <i class="fas fa-chart-line"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.5; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome | SecureExam{% endblock %}
+
+{% block content %}
+<div class="animate" style="width: 100%; max-width: 900px; text-align: center;">
+    <div style="margin-bottom: 4rem;">
+        <div style="display: inline-block; background: rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 100px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); margin-bottom: 1.5rem;">
+            <span style="color: white; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;">University Examination Systems</span>
+        </div>
+        <h1 style="font-size: 4rem; font-weight: 900; color: white; letter-spacing: -2px; line-height: 1; margin-bottom: 1rem;">SecureExam<span style="color: #6366F1;">.</span></h1>
+        <p style="color: rgba(255,255,255,0.7); font-size: 1.25rem; font-weight: 500; max-width: 600px; margin: 0 auto;">The advanced digital infrastructure for academic integrity and examination management.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem;">
+        <!-- Faculty Portal Entry -->
+        <a href="{{ url_for('faculty.login') }}" style="text-decoration: none; group">
+            <div style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 3rem 2rem; border-radius: 40px; transition: all 0.3s ease; text-align: center; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.transform='translateY(-10px)'; this.style.borderColor='rgba(99, 102, 241, 0.5)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 2rem; font-size: 2.5rem; color: white; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);">
+                    <i class="fas fa-chalkboard-user"></i>
+                </div>
+                <h3 style="color: white; font-size: 1.75rem; font-weight: 800; margin-bottom: 0.75rem;">Faculty Portal</h3>
+                <p style="color: rgba(255,255,255,0.5); font-weight: 500;">Manage exams, questions, and students in a high-security environment.</p>
+                <div style="margin-top: 2rem; color: #818CF8; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    ACCESS TERMINAL <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Student Portal Entry -->
+        <a href="{{ url_for('student.access') }}" style="text-decoration: none;">
+            <div style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 3rem 2rem; border-radius: 40px; transition: all 0.3s ease; text-align: center; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.transform='translateY(-10px)'; this.style.borderColor='rgba(16, 185, 129, 0.5)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 2rem; font-size: 2.5rem; color: white; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3 style="color: white; font-size: 1.75rem; font-weight: 800; margin-bottom: 0.75rem;">Student Access</h3>
+                <p style="color: rgba(255,255,255,0.5); font-weight: 500;">Enter your credentials to begin your authorized examination session.</p>
+                <div style="margin-top: 2rem; color: #34D399; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    START EXAMINATION <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Admin Quick Link -->
+    <div style="margin-top: 4rem;">
+        <a href="{{ url_for('admin.login') }}" style="color: rgba(255,255,255,0.4); text-decoration: none; font-weight: 700; font-size: 0.8rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fas fa-shield-halved"></i> SYSTEM OVERRIDE (ADMIN)
+        </a>
+    </div>
+</div>
+{% endblock %}

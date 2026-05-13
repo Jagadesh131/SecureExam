@@ -1,0 +1,3 @@
+2026-03-19 10:56:52.498277 - Exam: EXAMDF85, Student: balu, Reason: IMMEDIATE AUTO-SUBMIT: Window Focus Lost
+2026-03-19 10:57:27.717287 - Exam: EXAMDF85, Student: balu, Reason: IMMEDIATE AUTO-SUBMIT: Window Focus Lost
+2026-03-19 10:57:42.541403 - Exam: EXAMDF85, Student: balu, Reason: IMMEDIATE AUTO-SUBMIT: Tab/Window Switch detected

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Student Analytics — SECURE ADMIN{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="background: #F8FAFC; min-height: 100vh;">
+    <!-- Premium Navbar -->
+    <nav class="navbar" style="background: #000; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="navbar-brand" style="color: white; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-shield-halved" style="color: #FF3333;"></i>
+            SECURE ADMIN
+        </div>
+        <div class="navbar-links" style="display: flex; gap: 20px; align-items: center;">
+            <a href="{{ url_for('admin.dashboard') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Dashboard</a>
+            <a href="{{ url_for('admin.faculty_list') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Faculty</a>
+            <a href="{{ url_for('admin.exams') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Exams</a>
+            <a href="{{ url_for('admin.attempts') }}" style="color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Attempts</a>
+            <a href="{{ url_for('admin.analytics') }}" style="color: #9CA3AF; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Analytics</a>
+            <a href="{{ url_for('admin.logout') }}" style="background: rgba(239, 68, 68, 0.1); color: #EF4444; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="main-content" style="padding: 2rem 0; width: 100%;">
+        <div class="container-fluid" style="width: 100%; padding: 0; margin: 0;">
+            <!-- Header Section (Padded for elegance) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding: 0 2.5rem;">
+                <div>
+                    <h1 style="font-size: 2.75rem; font-weight: 900; color: #0F172A; margin-bottom: 0.5rem; letter-spacing: -1.5px;">Submission Stream</h1>
+                    {% if search %}
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
+                            <span style="background: #111; color: white; padding: 4px 12px; border-radius: 8px; font-weight: 800; font-size: 0.65rem; letter-spacing: 1px;">STREAM FILTER ACTIVE</span>
+                            <span style="color: #6366F1; font-weight: 900; font-size: 1.1rem;">"{{ search|upper }}"</span>
+                            <a href="{{ url_for('admin.attempts') }}" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; text-decoration: none; margin-left: 10px; border-bottom: 1px solid #EF444450;">[ CLEAR STREAM ]</a>
+                        </div>
+                    {% else %}
+                        <p style="color: #64748B; font-weight: 500;">Real-time results tracking and academic performance analytics.</p>
+                    {% endif %}
+                </div>
+                <form method="GET" style="position: relative;">
+                    <i class="fas fa-filter" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94A3B8;"></i>
+                    <input type="text" name="search" placeholder="Search by Reg No, Exam, or Department..." value="{{ search }}" style="padding: 14px 20px 14px 50px; border-radius: 16px; border: 1px solid #E2E8F0; width: 450px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); outline: none;" onfocus="this.style.borderColor='#FF3333'">
+                </form>
+            </div>
+
+            {% if not attempts %}
+            <div style="padding: 8rem 2rem; text-align: center; background: white; border-radius: 32px; border: 1px dashed #E2E8F0;">
+                {% if not search %}
+                    <div style="width: 80px; height: 80px; background: #EEF2FF; color: #6366F1; border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 2rem; font-size: 2rem;">
+                        <i class="fas fa-stream"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; font-weight: 900; color: #0F172A; margin-bottom: 0.5rem;">Submission Standby</h3>
+                    <p style="color: #64748B; font-weight: 500;">Enter a Registration Number or Department to begin real-time data streaming.</p>
+                {% else %}
+                    <div style="width: 80px; height: 80px; background: #F1F5F9; color: #94A3B8; border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 2rem; font-size: 2rem;">
+                        <i class="fas fa-ghost"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; font-weight: 900; color: #0F172A; margin-bottom: 0.5rem;">No Submissions Found</h3>
+                    <p style="color: #64748B; font-weight: 500;">No results match your query "{{ search }}".</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- Summary Bar (Padded for balance) -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; padding: 0 2.5rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                    <div><div style="font-size: 0.75rem; color: #64748B; font-weight: 800; text-transform: uppercase;">Pass Rate</div><div style="font-size: 1.5rem; font-weight: 900; color: #10B981;">{% set pass_count = attempts|selectattr('percentage', 'ge', 40)|list|length %}{{ (pass_count / attempts|length * 100)|round(1) }}%</div></div>
+                    <div style="width: 48px; height: 48px; background: #ECFDF5; color: #10B981; border-radius: 12px; display: flex; justify-content: center; align-items: center;"><i class="fas fa-graduation-cap"></i></div>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                    <div><div style="font-size: 0.75rem; color: #64748B; font-weight: 800; text-transform: uppercase;">Average Score</div><div style="font-size: 1.5rem; font-weight: 900; color: #6366F1;">{% set avg = attempts|sum(attribute='percentage') / attempts|length %}{{ avg|round(1) }}%</div></div>
+                    <div style="width: 48px; height: 48px; background: #EEF2FF; color: #6366F1; border-radius: 12px; display: flex; justify-content: center; align-items: center;"><i class="fas fa-chart-line"></i></div>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                    <div><div style="font-size: 0.75rem; color: #64748B; font-weight: 800; text-transform: uppercase;">Total Stream</div><div style="font-size: 1.5rem; font-weight: 900; color: #0F172A;">{{ attempts|length }} Items</div></div>
+                    <div style="width: 48px; height: 48px; background: #F1F5F9; color: #475569; border-radius: 12px; display: flex; justify-content: center; align-items: center;"><i class="fas fa-bolt"></i></div>
+                </div>
+            </div>
+
+            <!-- High-Density Results Ledger -->
+            <div class="results-card" style="background: white; border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; width: 100%; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
+                    <thead>
+                        <tr style="background: #0F172A;">
+                            <th style="padding: 1.5rem 2rem; text-align: left; font-size: 0.85rem; font-weight: 900; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px;">Registration No</th>
+                            <th style="padding: 1.5rem 2rem; text-align: left; font-size: 0.85rem; font-weight: 900; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px;">Student Name</th>
+                            <th style="padding: 1.5rem 2rem; text-align: left; font-size: 0.85rem; font-weight: 900; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px;">Department</th>
+                            <th style="padding: 1.5rem 2rem; text-align: left; font-size: 0.85rem; font-weight: 900; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px;">Exam Title</th>
+                            <th style="padding: 1.5rem 2rem; text-align: center; font-size: 0.85rem; font-weight: 900; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px;">Marks</th>
+                            <th style="padding: 1.5rem 2rem; text-align: center; font-size: 0.85rem; font-weight: 900; color: #94A3B8; text-transform: uppercase; letter-spacing: 1.5px;">Outcome</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in attempts %}
+                        <tr style="border-bottom: 1px solid #F1F5F9; transition: all 0.2s;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 1.5rem 2rem;">
+                                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 900; color: #FF3333; letter-spacing: -0.5px;">
+                                    {{ a.reg_number }}
+                                </div>
+                            </td>
+                            <td style="padding: 1.5rem 2rem;">
+                                <div style="font-weight: 800; color: #1E293B; font-size: 0.95rem;">{{ a.student_name }}</div>
+                            </td>
+                            <td style="padding: 1.5rem 2rem;">
+                                {% set dept = a.faculty_dept|upper or 'GENERAL' %}
+                                {% set badge_color = 
+                                    '#6366F1' if 'CSE' in dept or 'COMPUTER' in dept else 
+                                    '#10B981' if 'EEE' in dept or 'ECE' in dept or 'ELECT' in dept else 
+                                    '#F59E0B' if 'PHYSICS' in dept or 'MECH' in dept else 
+                                    '#EC4899' if 'CHEMISTRY' in dept or 'BIO' in dept else 
+                                    '#8B5CF6' if 'MATH' in dept or 'IT' in dept else 
+                                    '#06B6D4' if 'CIVIL' in dept or 'ARCH' in dept else 
+                                    '#F43F5E' if 'MBA' in dept or 'MGMT' in dept else '#64748B' 
+                                %}
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: {{ badge_color }};"></div>
+                                    <span style="font-weight: 800; color: #475569; font-size: 0.85rem;">{{ dept }}</span>
+                                </div>
+                            </td>
+                            <td style="padding: 1.5rem 2rem;">
+                                <div style="font-weight: 700; color: #1E293B; font-size: 0.9rem;">{{ a.exam_name }}</div>
+                            </td>
+                            <td style="padding: 1.5rem 2rem; text-align: center;">
+                                <div style="font-size: 1.4rem; font-weight: 900; color: {% if a.percentage >= 40 %}#10B981{% else %}#EF4444{% endif %};">
+                                    {{ a.percentage }}%
+                                </div>
+                            </td>
+                            <td style="padding: 1.5rem 2rem; text-align: center;">
+                                <div style="font-size: 0.7rem; font-weight: 900; padding: 6px 12px; border-radius: 10px; display: inline-block; letter-spacing: 0.5px;
+                                    {% if a.percentage >= 75 %} background: #DCFCE7; color: #15803D; border: 1px solid #15803D20;
+                                    {% elif a.percentage >= 40 %} background: #F0F9FF; color: #0369A1; border: 1px solid #0369A120;
+                                    {% else %} background: #FEF2F2; color: #991B1B; border: 1px solid #991B1B20; {% endif %}">
+                                    {% if a.percentage >= 75 %}DISTINCTION{% elif a.percentage >= 40 %}PASSED{% else %}FAILED{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

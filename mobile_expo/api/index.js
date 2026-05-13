@@ -1,0 +1,132 @@
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
+// Dynamically detect server IP
+const getBaseUrl = () => {
+  if (Platform.OS === 'web') return 'http://127.0.0.1:5050/api';
+  
+  const debuggerHost = Constants.expoConfig?.hostUri?.split(':')[0];
+  if (debuggerHost) return `http://${debuggerHost}:5050/api`;
+  
+  return 'http://172.19.86.14:5050/api'; // Fallback
+};
+
+export const BASE_URL = getBaseUrl();
+
+// Helper for robust API calls with timeout
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 8000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+    
+    clearTimeout(id);
+    
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { message: `HTTP Error ${response.status}` };
+      }
+      throw new Error(errorData.message || errorData.error || 'Network response was not ok');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    clearTimeout(id);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout. Please check your network connection.');
+    }
+    throw error;
+  }
+};
+
+export const ApiService = {
+  // --- STUDENT ENDPOINTS ---
+  getExam: async (examCode) => {
+    return fetchWithTimeout(`${BASE_URL}/exam/${examCode}`);
+  },
+
+  submitExam: async (examCode, studentData) => {
+    return fetchWithTimeout(`${BASE_URL}/exam/${examCode}/submit`, {
+      method: 'POST',
+      body: JSON.stringify(studentData),
+    });
+  },
+
+  // --- FACULTY ENDPOINTS ---
+  getFacultyDashboard: async (facultyId, searchQuery = '') => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/dashboard?faculty_id=${facultyId}&search=${encodeURIComponent(searchQuery)}`);
+  },
+  
+  facultyLogin: async (credentials) => {
+    return fetchWithTimeout(`${BASE_URL}/login`, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  },
+  
+  facultyRegister: async (data) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/register`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  createExam: async (examData) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/create`, {
+      method: 'POST',
+      body: JSON.stringify(examData),
+    });
+  },
+
+  toggleExam: async (examCode) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/toggle`, {
+      method: 'POST',
+    });
+  },
+
+  getQuestions: async (examCode) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/questions`);
+  },
+
+  addQuestion: async (examCode, questionData) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/question/add`, {
+      method: 'POST',
+      body: JSON.stringify(questionData),
+    });
+  },
+
+  // --- ADMIN ENDPOINTS ---
+  adminLogin: async (credentials) => {
+    return fetchWithTimeout(`${BASE_URL}/admin/login`, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  },
+
+  getAdminFaculty: async (searchQuery = '') => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/list?search=${encodeURIComponent(searchQuery)}`);
+  },
+
+  getAdminExams: async (searchQuery = '') => {
+    return fetchWithTimeout(`${BASE_URL}/exams/all?search=${encodeURIComponent(searchQuery)}`);
+  },
+
+  getAdminAttempts: async (searchQuery = '') => {
+    return fetchWithTimeout(`${BASE_URL}/admin/attempts?search=${encodeURIComponent(searchQuery)}`);
+  },
+
+  getAdminAnalytics: async () => {
+    return fetchWithTimeout(`${BASE_URL}/admin/analytics`);
+  },
+};

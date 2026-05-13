@@ -1,0 +1,572 @@
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from routes.utils import send_email, send_email_debug, get_network_ip
+from flask_mail import Message
+import random
+import string
+from datetime import datetime, timedelta
+from database import get_db, generate_id, hash_password, check_password
+import json
+import re
+
+faculty_bp = Blueprint('faculty', __name__, url_prefix='/faculty')
+
+
+def faculty_required(f):
+    """Decorator to require faculty login."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('faculty_logged_in'):
+            return redirect(url_for('faculty.login'))
+        # If temp_flag is set, force password change
+        if session.get('temp_flag') and request.endpoint not in ['faculty.force_change_password', 'faculty.logout']:
+            return redirect(url_for('faculty.force_change_password'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def validate_password(password):
+    """Validate password strength."""
+    errors = []
+    if len(password) < 8:
+        errors.append('At least 8 characters')
+    if not re.search(r'[A-Z]', password):
+        errors.append('At least one uppercase letter')
+    if not re.search(r'[a-z]', password):
+        errors.append('At least one lowercase letter')
+    if not re.search(r'[0-9]', password):
+        errors.append('At least one number')
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        errors.append('At least one special character')
+    return errors
+
+
+@faculty_bp.route('/', methods=['GET'])
+def login():
+    return render_template('faculty/login.html')
+
+
+@faculty_bp.route('/authenticate', methods=['POST'])
+def authenticate():
+    faculty_id = request.form.get('faculty_id', '').strip().upper()
+    password = request.form.get('password', '')
+
+    db = get_db()
+    faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (faculty_id,)).fetchone()
+    db.close()
+
+    if faculty and check_password(faculty['password'], password):
+        session['faculty_logged_in'] = True
+        session['faculty_id'] = faculty['faculty_id']
+        session['faculty_name'] = faculty['name']
+        session['temp_flag'] = faculty['temp_flag']
+
+        if faculty['temp_flag'] == 1:
+            flash('You must change your temporary password before continuing.', 'warning')
+            return redirect(url_for('faculty.force_change_password'))
+
+        flash(f'Welcome, {faculty["name"]}!', 'success')
+        return redirect(url_for('faculty.dashboard'))
+
+    flash('Invalid Faculty ID or password.', 'error')
+    return redirect(url_for('faculty.login'))
+
+
+@faculty_bp.route('/force-change-password', methods=['GET', 'POST'])
+def force_change_password():
+    if not session.get('faculty_logged_in'):
+        return redirect(url_for('faculty.login'))
+
+    if request.method == 'POST':
+        new_pass = request.form.get('new_password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        if new_pass != confirm:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('faculty.force_change_password'))
+
+        errors = validate_password(new_pass)
+        if errors:
+            flash('Password requirements not met: ' + ', '.join(errors), 'error')
+            return redirect(url_for('faculty.force_change_password'))
+
+        hashed = generate_password_hash(new_pass)
+        db = get_db()
+        db.execute('UPDATE faculty SET password=?, temp_flag=0 WHERE faculty_id=?',
+                   (hashed, session['faculty_id']))
+        db.commit()
+        db.close()
+
+        session['temp_flag'] = 0
+        flash('Password changed successfully! Please login with your new password.', 'success')
+        return redirect(url_for('faculty.logout'))
+
+    return render_template('faculty/force_change_password.html')
+
+
+@faculty_bp.route('/dashboard')
+@faculty_required
+def dashboard():
+    from database import get_faculty_exams_with_counts
+    exams = get_faculty_exams_with_counts(session['faculty_id'])
+    return render_template('faculty/dashboard.html', exams=exams)
+
+
+@faculty_bp.route('/exam/create', methods=['POST'])
+@faculty_required
+def create_exam():
+    exam_name = request.form.get('exam_name', '').strip()
+    subject = request.form.get('subject', '').strip()
+    duration = request.form.get('duration', '0').strip()
+
+    if not all([exam_name, subject, duration]):
+        flash('All fields are required.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    try:
+        duration = int(duration)
+        if duration < 5 or duration > 180:
+            flash('Duration must be between 5 and 180 minutes.', 'error')
+            return redirect(url_for('faculty.dashboard'))
+    except ValueError:
+        flash('Invalid duration.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    exam_code = generate_id('EXAM', 4)
+    db = get_db()
+    try:
+        db.execute(
+            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration) VALUES (?, ?, ?, ?, ?)',
+            (exam_code, exam_name, session['faculty_id'], subject, duration)
+        )
+        db.commit()
+        flash(f'Exam created! Code: {exam_code}', 'success')
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    finally:
+        db.close()
+
+    return redirect(url_for('faculty.dashboard'))
+
+
+@faculty_bp.route('/exam/<exam_code>')
+@faculty_required
+def exam_detail(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?',
+                      (exam_code, session['faculty_id'])).fetchone()
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    questions = db.execute('SELECT * FROM questions WHERE exam_code = ? ORDER BY id',
+                           (exam_code,)).fetchall()
+    
+    # Fetch Stats for Premium Dashboard
+    attempts = db.execute('SELECT * FROM student_attempts WHERE exam_code = ? ORDER BY attempt_date DESC', (exam_code,)).fetchall()
+    
+    total_students = len(attempts)
+    avg_score = 0
+    if total_students > 0:
+        total_score = sum(a['percentage'] for a in attempts)
+        avg_score = round(total_score / total_students)
+    
+    # Recent Activity (Top 5)
+    recent_activity = attempts[:5]
+
+    db.close()
+    return render_template('faculty/exam_detail.html', 
+                          exam=exam, 
+                          questions=questions,
+                          total_students=total_students,
+                          avg_score=avg_score,
+                          recent_activity=recent_activity)
+
+
+@faculty_bp.route('/exam/<exam_code>/edit', methods=['POST'])
+@faculty_required
+def edit_exam(exam_code):
+    exam_name = request.form.get('exam_name', '').strip()
+    subject = request.form.get('subject', '').strip()
+    duration = request.form.get('duration', '0').strip()
+
+    if not all([exam_name, subject, duration]):
+        flash('All fields are required.', 'error')
+        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+    try:
+        duration = int(duration)
+        if duration < 5 or duration > 180:
+            flash('Duration must be between 5 and 180 minutes.', 'error')
+            return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+    except ValueError:
+        flash('Invalid duration.', 'error')
+        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+    db = get_db()
+    db.execute('UPDATE exams SET exam_name=?, subject=?, duration=? WHERE exam_code=? AND faculty_id=?',
+               (exam_name, subject, duration, exam_code, session['faculty_id']))
+    db.commit()
+    db.close()
+    flash('Exam updated.', 'success')
+    return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+
+@faculty_bp.route('/exam/<exam_code>/toggle', methods=['POST'])
+@faculty_required
+def toggle_exam(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT is_active FROM exams WHERE exam_code = ? AND faculty_id = ?',
+                      (exam_code, session['faculty_id'])).fetchone()
+    if exam:
+        new_status = 0 if exam['is_active'] else 1
+        db.execute('UPDATE exams SET is_active=? WHERE exam_code=?', (new_status, exam_code))
+        db.commit()
+        status_text = 'activated' if new_status else 'deactivated'
+        flash(f'Exam {status_text}.', 'success')
+    db.close()
+    return redirect(url_for('faculty.dashboard'))
+
+
+@faculty_bp.route('/exam/<exam_code>/delete', methods=['POST'])
+@faculty_required
+def delete_exam(exam_code):
+    db = get_db()
+    db.execute('DELETE FROM exams WHERE exam_code=? AND faculty_id=?',
+               (exam_code, session['faculty_id']))
+    db.commit()
+    db.close()
+    flash('Exam deleted with all questions and results.', 'success')
+    return redirect(url_for('faculty.dashboard'))
+
+
+@faculty_bp.route('/exam/<exam_code>/question/add', methods=['POST'])
+@faculty_required
+def add_question(exam_code):
+    question_text = request.form.get('question_text', '').strip()
+    option_a = request.form.get('option_a', '').strip()
+    option_b = request.form.get('option_b', '').strip()
+    option_c = request.form.get('option_c', '').strip()
+    option_d = request.form.get('option_d', '').strip()
+    correct_answer = request.form.get('correct_answer', '').strip().upper()
+
+    if not all([question_text, option_a, option_b, option_c, option_d, correct_answer]):
+        flash('All fields are required.', 'error')
+        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+    if correct_answer not in ['A', 'B', 'C', 'D']:
+        flash('Correct answer must be A, B, C, or D.', 'error')
+        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+    db = get_db()
+    db.execute(
+        'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer)
+    )
+    db.commit()
+    db.close()
+    flash('Question added.', 'success')
+    return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+
+@faculty_bp.route('/exam/<exam_code>/question/<int:q_id>/delete', methods=['POST'])
+@faculty_required
+def delete_question(exam_code, q_id):
+    db = get_db()
+    db.execute('DELETE FROM questions WHERE id=? AND exam_code=?', (q_id, exam_code))
+    db.commit()
+    db.close()
+    flash('Question deleted.', 'success')
+    return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+
+
+@faculty_bp.route('/exam/<exam_code>/results')
+@faculty_required
+def exam_results(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?',
+                      (exam_code, session['faculty_id'])).fetchone()
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    results = db.execute(
+        'SELECT * FROM student_attempts WHERE exam_code = ? ORDER BY attempt_date DESC',
+        (exam_code,)
+    ).fetchall()
+    db.close()
+    return render_template('faculty/results.html', exam=exam, results=results)
+
+
+@faculty_bp.route('/change-password', methods=['GET', 'POST'])
+@faculty_required
+def change_password():
+    if request.method == 'POST':
+        current = request.form.get('current_password', '')
+        new_pass = request.form.get('new_password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        db = get_db()
+        faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?',
+                             (session['faculty_id'],)).fetchone()
+
+        if not check_password_hash(faculty['password'], current):
+            flash('Current password is incorrect.', 'error')
+            db.close()
+            return redirect(url_for('faculty.change_password'))
+
+        if new_pass != confirm:
+            flash('Passwords do not match.', 'error')
+            db.close()
+            return redirect(url_for('faculty.change_password'))
+
+        errors = validate_password(new_pass)
+        if errors:
+            flash('Password requirements not met: ' + ', '.join(errors), 'error')
+            db.close()
+            return redirect(url_for('faculty.change_password'))
+
+        hashed = hash_password(new_pass)
+        db.execute('UPDATE faculty SET password=? WHERE faculty_id=?',
+                   (hashed, session['faculty_id']))
+        db.commit()
+        db.close()
+        flash('Password changed successfully! Please login again.', 'success')
+        return redirect(url_for('faculty.logout'))
+
+    return render_template('faculty/change_password.html')
+
+
+
+@faculty_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        faculty_id = request.form.get('faculty_id', '').strip().upper()
+        db = get_db()
+        faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (faculty_id,)).fetchone()
+
+        if faculty:
+            # Generate a new random strong temporary password
+            new_clear_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+            hashed = hash_password(new_clear_pass)
+            
+            # Update database with temporary password and set temp_flag=1
+            db.execute('UPDATE faculty SET password=?, temp_flag=1 WHERE faculty_id=?', 
+                       (hashed, faculty_id))
+            db.commit()
+
+            # Prepare Email Content (Plain Text Fallback)
+            subject = 'Password Recovery - MCQ System'
+            body = (
+                f"Hello {faculty['name']},\n\n"
+                f"Your password has been reset.\n\n"
+                f"Faculty ID: {faculty_id}\n"
+                f"Temporary Password: {new_clear_pass}\n\n"
+                f"Change this on your next login."
+            )
+            
+            # Premium HTML Template
+            html_content = f"""
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">🎓</div>
+                    <h2 style="color: #2c3e50; margin: 0;">MCQ Examination System</h2>
+                    <p style="color: #7f8c8d; margin: 5px 0 0 0;">University Faculty Portal</p>
+                </div>
+                
+                <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; border-left: 4px solid #3498db; margin-bottom: 25px;">
+                    <h3 style="color: #2c3e50; margin-top: 0;">Password Recovery</h3>
+                    <p style="color: #34495e; font-size: 16px;">Hello <strong>{faculty['name']}</strong>,</p>
+                    <p style="color: #34495e; font-size: 16px;">Following your request, a temporary password has been generated for your account.</p>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 10px; color: #7f8c8d; width: 40%; border-bottom: 1px solid #eee;">Faculty ID</td>
+                            <td style="padding: 10px; color: #2c3e50; font-weight: bold; border-bottom: 1px solid #eee;">{faculty_id}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; color: #7f8c8d; border-bottom: 1px solid #eee;">Temporary Password</td>
+                            <td style="padding: 10px; color: #e74c3c; font-weight: bold; font-family: monospace; font-size: 18px; border-bottom: 1px solid #eee;">{new_clear_pass}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <a href="http://{get_network_ip()}:5050{url_for('faculty.login')}" style="background-color: #3498db; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Login to Portal</a>
+                </div>
+                
+                <p style="color: #e67e22; font-size: 14px; text-align: center; background-color: #fff3e0; padding: 10px; border-radius: 4px;">
+                    <strong>Security Note:</strong> You will be required to change this temporary password immediately after logging in.
+                </p>
+                
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+                
+                <p style="color: #95a5a6; font-size: 12px; text-align: center; margin: 0;">
+                    This is an automated message from the MCQ Examination System. Please do not reply to this email.
+                </p>
+            </div>
+            """
+            
+            # Send Email
+            success, error_msg = send_email_debug(subject, [faculty['email']], body, html=html_content)
+            if success:
+                email_parts = faculty['email'].split('@')
+                masked_email = email_parts[0][0] + "***" + email_parts[0][-1] + "@" + email_parts[1]
+                flash(f'Login details have been sent to {masked_email}. Please check your inbox.', 'success')
+            else:
+                flash(f'Password reset successful, but the email failed to send. Reason: {error_msg}', 'warning')
+            
+            db.close()
+            return redirect(url_for('faculty.login'))
+        else:
+            flash('Faculty ID not found.', 'error')
+            db.close()
+
+    return render_template('faculty/forgot_password.html')
+
+
+@faculty_bp.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        department = request.form.get('department', '').strip()
+        phone = request.form.get('phone', '').strip()
+        birthday = request.form.get('birthday', '')
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        if not all([name, email, department, phone, birthday, password]):
+            flash('All fields are required.', 'error')
+            return redirect(url_for('faculty.signup'))
+
+        if password != confirm:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('faculty.signup'))
+
+        errors = validate_password(password)
+        if errors:
+            flash('Password requirements not met: ' + ', '.join(errors), 'error')
+            return redirect(url_for('faculty.signup'))
+
+        db = get_db()
+        # Check if email already exists
+        existing = db.execute('SELECT id FROM faculty WHERE email = ?', (email,)).fetchone()
+        if existing:
+            flash('Email already registered.', 'error')
+            db.close()
+            return redirect(url_for('faculty.signup'))
+
+        faculty_id = generate_id('FAC')
+        hashed = hash_password(password)
+
+        try:
+            db.execute(
+                '''INSERT INTO faculty (faculty_id, name, email, password, department, phone, birthday, temp_flag) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 0)''',
+                (faculty_id, name, email, hashed, department, phone, birthday)
+            )
+            db.commit()
+            flash(f'Registration successful! Your Faculty ID is: {faculty_id}', 'success')
+            return redirect(url_for('faculty.login'))
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+        finally:
+            db.close()
+
+    return render_template('faculty/signup.html')
+
+
+@faculty_bp.route('/my-account')
+@faculty_required
+def my_account():
+    db = get_db()
+    faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (session['faculty_id'],)).fetchone()
+    db.close()
+    return render_template('faculty/my_account.html', faculty=faculty)
+
+
+@faculty_bp.route('/edit-profile', methods=['GET', 'POST'])
+@faculty_required
+def edit_profile():
+    db = get_db()
+    # Fetch faculty details once, needed for both GET and POST (for department in POST)
+    faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (session['faculty_id'],)).fetchone()
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        department = request.form.get('department', '').strip()
+        phone = request.form.get('phone', '').strip()
+        birthday = request.form.get('birthday', '')
+
+        if not all([name, email, department]):
+            flash('Name, Email, and Department are required.', 'error')
+            db.close()
+            return redirect(url_for('faculty.edit_profile'))
+
+        # Check for unique email if changed
+        # Only check if the email is different from the current one
+        if email != faculty['email']:
+            existing = db.execute('SELECT id FROM faculty WHERE email = ?', (email,)).fetchone()
+            if existing:
+                flash('This email is already used by another account.', 'error')
+                db.close()
+                return redirect(url_for('faculty.edit_profile'))
+
+        db.execute('UPDATE faculty SET email=?, name=?, department=?, phone=?, birthday=? WHERE faculty_id=?',
+                   (email, name, department, phone, birthday, session['faculty_id']))
+        db.commit()
+        session['faculty_name'] = name # Update session name
+        flash('Profile updated successfully!', 'success')
+        db.close()
+        return redirect(url_for('faculty.my_account'))
+
+    db.close() # Close DB connection for GET request path
+    return render_template('faculty/edit_profile.html', faculty=faculty)
+
+
+@faculty_bp.route('/upload-photo', methods=['POST'])
+@faculty_required
+def upload_photo():
+    if 'profile_pic' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('faculty.my_account'))
+    
+    file = request.files['profile_pic']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect(url_for('faculty.my_account'))
+
+    if file:
+        import os
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(f"{session['faculty_id']}_{file.filename}")
+        upload_path = os.path.join(current_app.root_path, 'static', 'images', filename)
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+        
+        file.save(upload_path)
+        
+        db = get_db()
+        db.execute('UPDATE faculty SET profile_pic=? WHERE faculty_id=?', (filename, session['faculty_id']))
+        db.commit()
+        db.close()
+        
+        flash('Profile picture updated!', 'success')
+        return redirect(url_for('faculty.my_account'))
+
+
+@faculty_bp.route('/logout')
+def logout():
+    session.pop('faculty_logged_in', None)
+    session.pop('faculty_id', None)
+    session.pop('faculty_name', None)
+    session.pop('temp_flag', None)
+    flash('Logged out successfully.', 'info')
+    return redirect(url_for('faculty.login'))

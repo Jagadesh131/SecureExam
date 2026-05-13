@@ -1,0 +1,1 @@
+﻿import React from \react\; import FacultySubScreen from \../../components/FacultySubScreen\; export default function Analytics() { return ( <FacultySubScreen title=\Analytics\ icon=\chart-line\ /> ); }

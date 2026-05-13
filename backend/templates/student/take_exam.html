@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.exam_name }} — In Progress{% endblock %}
+
+{% block extra_head %}
+<style>
+    body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper no-select">
+    <!-- Sticky Timer Bar -->
+    <div class="exam-header-bar">
+        <div class="container exam-header-content">
+            <div>
+                <strong>{{ exam.exam_name }}</strong>
+                <span class="text-muted text-sm"> · {{ exam.subject }}</span>
+            </div>
+            <div class="timer-display" id="timer">{{ exam.duration }}:00</div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container section">
+            <div class="alert alert-danger mb-3" id="guidelines-banner">
+                <strong>🚫 Strictly Prohibited:</strong> Tab switching, opening other windows, and copy-pasting are monitored. 
+                <br><strong>Warning:</strong> The exam will be <u>automatically submitted IMMEDIATELY</u> if you switch tabs or leave this window.
+            </div>
+            <form id="examForm" method="POST" action="{{ url_for('student.submit_exam', exam_code=exam.exam_code) }}">
+                <input type="hidden" name="student_name" value="{{ student_name }}">
+                <input type="hidden" name="reg_number" value="{{ reg_number }}">
+
+                {% for q in questions %}
+                <div class="question-card" id="qcard-{{ q.id }}">
+                    <div class="question-text">
+                        <span class="question-number">{{ loop.index }}</span>
+                        <span>{{ q.question_text }}</span>
+                    </div>
+                    <div class="option-group">
+                        <label class="option-label">
+                            <input type="radio" name="q_{{ q.id }}" value="A">
+                            <span class="option-letter">A</span>
+                            <span>{{ q.option_a }}</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q_{{ q.id }}" value="B">
+                            <span class="option-letter">B</span>
+                            <span>{{ q.option_b }}</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q_{{ q.id }}" value="C">
+                            <span class="option-letter">C</span>
+                            <span>{{ q.option_c }}</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q_{{ q.id }}" value="D">
+                            <span class="option-letter">D</span>
+                            <span>{{ q.option_d }}</span>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="text-center mt-3" style="padding-bottom: 2rem;">
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" onclick="return confirm('Are you sure you want to submit? You cannot change answers after submission.')">
+                        Submit Exam
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    // === TIMER ===
+    let totalSeconds = {{ exam.duration }} * 60;
+    const timerEl = document.getElementById('timer');
+    const form = document.getElementById('examForm');
+    let submitted = false;
+
+    function updateTimer() {
+        if (submitted) return;
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        timerEl.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+
+        if (totalSeconds <= 60) {
+            timerEl.classList.add('warning');
+        }
+
+        if (totalSeconds <= 0) {
+            submitted = true;
+            timerEl.textContent = '00:00';
+            form.submit();
+            return;
+        }
+
+        totalSeconds--;
+        setTimeout(updateTimer, 1000);
+    }
+
+    updateTimer();
+
+    // Prevent double submit
+    form.addEventListener('submit', function() {
+        if (submitted) return false;
+        submitted = true;
+    });
+
+    // === ANTI-CHEAT ===
+    // Disable right-click
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+    // Block keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // F12
+        if (e.key === 'F12') { e.preventDefault(); return false; }
+        // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+        if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) { e.preventDefault(); return false; }
+        // Ctrl+U (view source)
+        if (e.ctrlKey && e.key.toUpperCase() === 'U') { e.preventDefault(); return false; }
+        // Ctrl+S (save)
+        if (e.ctrlKey && e.key.toUpperCase() === 'S') { e.preventDefault(); return false; }
+        // Ctrl+A (select all)
+        if (e.ctrlKey && e.key.toUpperCase() === 'A') { e.preventDefault(); return false; }
+        // Ctrl+C (copy)
+        if (e.ctrlKey && e.key.toUpperCase() === 'C') { e.preventDefault(); return false; }
+        // Ctrl+P (print)
+        if (e.ctrlKey && e.key.toUpperCase() === 'P') { e.preventDefault(); return false; }
+    });
+
+    // Block copy/cut/paste
+    document.addEventListener('copy', function(e) { e.preventDefault(); });
+    document.addEventListener('cut', function(e) { e.preventDefault(); });
+    document.addEventListener('paste', function(e) { e.preventDefault(); });
+
+    // === TAB SWITCH DETECTION ===
+    function reportViolation(reason) {
+        if (submitted) return;
+        submitted = true;
+        
+        // Log to server (Beacon is more reliable for page unloads)
+        const logData = JSON.stringify({
+            exam_code: {{ exam.exam_code | tojson }},
+            student_name: {{ student_name | tojson }},
+            reason: "IMMEDIATE AUTO-SUBMIT: " + reason
+        });
+        
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('/report-cheating-beacon', logData);
+        } else {
+            fetch('/report-cheating', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: logData,
+                keepalive: true 
+            });
+        }
+
+        alert("SECURITY VIOLATION: " + reason + ". Your exam is being submitted automatically.");
+        submitted = true;
+        form.submit();
+    }
+
+    // Detect visibility change
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden' && !submitted) {
+            reportViolation("Tab/Window Switch detected");
+        }
+    });
+
+    // Detect focus loss
+    window.addEventListener('blur', function() {
+        if (!submitted) {
+            reportViolation("Window Focus Lost");
+        }
+    });
+
+    // Block drag
+    document.addEventListener('dragstart', function(e) { 
+        e.preventDefault(); 
+        reportViolation("Drag detected");
+    });
+})();
+</script>
+{% endblock %}

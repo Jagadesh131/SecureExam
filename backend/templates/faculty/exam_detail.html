@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ exam.exam_name }} — Manage Exam</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Left Sidebar -->
+    <aside class="left-sidebar">
+        <div class="brand">
+            <div style="font-size: 24px;">🎓</div>
+            <span class="brand-name">SecureExam</span>
+        </div>
+
+        <!-- Active Exam Selector -->
+        <div style="padding: 0 16px; margin-bottom: 24px;">
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">ACTIVE EXAM</div>
+                <div style="color: white; font-size: 14px; font-weight: 700;">{{ exam.exam_name }}</div>
+                <div style="font-size: 11px; color: #3B82F6;">{{ exam.exam_code }}</div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Exam Management</div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i> Exam Settings
+            </a>
+            <a href="#" class="nav-item" onclick="document.getElementById('editModal').style.display='flex'">
+                <i class="fas fa-edit"></i> Edit Exam
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Question Management</div>
+            <a href="#" class="nav-item" onclick="document.getElementById('manageQModal').style.display='flex'">
+                <i class="fas fa-tasks"></i> Manage Questions
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-file-upload"></i> Bulk Upload CSV
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Results & Analytics</div>
+            <a href="{{ url_for('faculty.exam_results', exam_code=exam.exam_code) }}" class="nav-item">
+                <i class="fas fa-poll"></i> Exam Results
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-users"></i> Attendance
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-pie"></i> Analytics
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-file-export"></i> Export Report
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">General Tools</div>
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
+                <i class="fas fa-list"></i> All Exams
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-plus-circle"></i> Create New Exam
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-book"></i> All Gradebook
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img src="{{ url_for('static', filename='img/faculty_avatar.png') }}" class="user-avatar" alt="Avatar">
+                <div class="user-info">
+                    <span class="user-name">{{ session.faculty_name }}</span>
+                    <span class="user-email">Faculty Portal</span>
+                </div>
+            </div>
+            <a href="{{ url_for('faculty.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div class="header-meta">
+            <h1 class="exam-title">{{ exam.exam_name }}</h1>
+            <div class="exam-subtitle">
+                Exam Code: <span style="font-weight: 700;">{{ exam.exam_code }}</span> | 
+                Subject: <span style="font-weight: 700;">{{ exam.subject }}</span>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Exam Status</div>
+                    <div class="stat-value" style="color: {{ '#10B981' if exam.is_active else '#64748B' }};">{{ 'Active' if exam.is_active else 'Inactive' }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Students Attempted</div>
+                    <div class="stat-value">{{ total_students }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Exam Avg Score</div>
+                    <div class="stat-value">{{ avg_score }}%</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="calendar-title">May 2026</div>
+                <button class="schedule-btn">Schedule Exam</button>
+            </div>
+            <div class="calendar-grid">
+                <div class="day-name">Sun</div>
+                <div class="day-name">Mon</div>
+                <div class="day-name">Tue</div>
+                <div class="day-name">Wed</div>
+                <div class="day-name">Thu</div>
+                <div class="day-name">Fri</div>
+                <div class="day-name">Sat</div>
+                
+                <!-- Placeholder days to align May 1st 2026 (Friday) -->
+                <div></div><div></div><div></div><div></div><div></div>
+                <div class="calendar-day active">1</div>
+                <div class="calendar-day">2</div>
+                <div class="calendar-day">3</div>
+                <div class="calendar-day">4</div>
+                <div class="calendar-day">5</div>
+                <div class="calendar-day">6</div>
+                <div class="calendar-day">7</div>
+                <div class="calendar-day">8</div>
+                <div class="calendar-day">9</div>
+                <div class="calendar-day">10</div>
+                <div class="calendar-day">11</div>
+                <div class="calendar-day">12</div>
+                <div class="calendar-day">13</div>
+                <div class="calendar-day">14</div>
+                <div class="calendar-day">15</div>
+                <div class="calendar-day">16</div>
+                <div class="calendar-day">17</div>
+                <div class="calendar-day">18</div>
+                <div class="calendar-day">19</div>
+                <div class="calendar-day">20</div>
+                <div class="calendar-day">21</div>
+                <div class="calendar-day">22</div>
+                <div class="calendar-day">23</div>
+                <div class="calendar-day">24</div>
+                <div class="calendar-day">25</div>
+                <div class="calendar-day">26</div>
+                <div class="calendar-day">27</div>
+                <div class="calendar-day">28</div>
+                <div class="calendar-day">29</div>
+                <div class="calendar-day">30</div>
+                <div class="calendar-day">31</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <h2 class="quick-actions-title">Quick Actions</h2>
+        <div class="actions-grid">
+            <a href="#" class="action-btn" onclick="document.getElementById('manageQModal').style.display='flex'">
+                <i class="fas fa-tasks"></i> Manage Questions
+            </a>
+            <a href="{{ url_for('faculty.exam_results', exam_code=exam.exam_code) }}" class="action-btn">
+                <i class="fas fa-poll-h"></i> View Results
+            </a>
+            <a href="#" class="action-btn">
+                <i class="fas fa-sliders-h"></i> Exam Settings
+            </a>
+            <a href="#" class="action-btn">
+                <i class="fas fa-file-download"></i> Export Report
+            </a>
+        </div>
+    </main>
+
+    <!-- Right Sidebar (Activity) -->
+    <aside class="right-sidebar">
+        <h2 class="activity-title">{{ exam.exam_code }} Activity</h2>
+        <p class="activity-subtitle">Showing results for this exam only</p>
+
+        {% if recent_activity %}
+            {% for a in recent_activity %}
+            <div class="activity-item">
+                <div class="activity-avatar">{{ a.student_name[0]|upper }}</div>
+                <div class="activity-content">
+                    <div class="activity-user">{{ a.student_name }}</div>
+                    <div class="activity-detail">
+                        Completed {{ exam.exam_code }} - Score: <strong>{{ a.score }}/{{ a.total_questions }} ({{ a.percentage }}%)</strong>
+                    </div>
+                    <div class="activity-time">{{ a.attempt_date }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; color: #94A3B8; margin-top: 40px;">
+                <i class="fas fa-history" style="font-size: 32px; margin-bottom: 12px;"></i>
+                <p>No recent activity</p>
+            </div>
+        {% endif %}
+    </aside>
+</div>
+
+<!-- Modal for Managing Questions -->
+<div id="manageQModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:700px; max-height:85vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3>Manage Questions ({{ questions|length }})</h3>
+            <button onclick="document.getElementById('manageQModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        
+        {% if questions %}
+            {% for q in questions %}
+            <div style="padding:15px; border-bottom:1px solid #eee;">
+                <p style="margin-bottom:8px;"><strong>{{ loop.index }}.</strong> {{ q.question_text }}</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px; color:#64748B;">
+                    <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'A' else '' }}">A: {{ q.option_a }}</div>
+                    <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'B' else '' }}">B: {{ q.option_b }}</div>
+                    <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'C' else '' }}">C: {{ q.option_c }}</div>
+                    <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'D' else '' }}">D: {{ q.option_d }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align:center; color:#94A3B8; padding:40px;">No questions added yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Edit Exam Modal -->
+<div id="editModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:450px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3 style="margin:0;">Edit Exam</h3>
+            <button onclick="document.getElementById('editModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('faculty.edit_exam', exam_code=exam.exam_code) }}">
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Exam Name</label>
+                <input type="text" name="exam_name" value="{{ exam.exam_name }}" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Subject</label>
+                <input type="text" name="subject" value="{{ exam.subject }}" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Duration (min)</label>
+                <input type="number" name="duration" value="{{ exam.duration }}" min="5" max="180" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <button type="submit" class="schedule-btn" style="width: 100%; padding: 14px;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Simple modal toggles
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', (e) => { if(e.target === m) m.style.display='none' });
+    });
+</script>
+
+</body>
+</html>

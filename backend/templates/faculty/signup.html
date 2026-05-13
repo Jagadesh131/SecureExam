@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Faculty Registration | SecureExam{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        background: #3B82F6;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Inter', sans-serif;
+    }
+    .su-container {
+        width: 100%;
+        max-width: 480px;
+        padding: 20px;
+    }
+    .back-btn {
+        color: white;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 20px;
+        font-weight: 600;
+        font-size: 15px;
+    }
+    .su-card {
+        background: white;
+        border-radius: 28px;
+        padding: 50px 35px 35px 35px;
+        position: relative;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        text-align: center;
+    }
+    .su-avatar-container {
+        position: absolute;
+        top: -45px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 5px;
+        border-radius: 50%;
+    }
+    .su-avatar {
+        width: 80px;
+        height: 80px;
+        background: #10B981;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .su-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .su-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #1E293B;
+        margin-bottom: 5px;
+    }
+    .su-subtitle {
+        color: #64748B;
+        font-size: 14px;
+        margin-bottom: 30px;
+    }
+    .su-form {
+        text-align: left;
+    }
+    .su-group {
+        margin-bottom: 18px;
+    }
+    .su-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+    .su-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 15px;
+        box-sizing: border-box;
+        color: #0F172A;
+        background: #F8FAFC;
+        transition: border-color 0.2s;
+    }
+    .su-input:focus {
+        outline: none;
+        border-color: #3B82F6;
+        background: white;
+    }
+    .su-submit {
+        width: 100%;
+        background-color: #059669;
+        color: white;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: opacity 0.2s;
+    }
+    .su-submit:hover {
+        opacity: 0.9;
+    }
+    .su-footer {
+        margin-top: 25px;
+        color: #64748B;
+        font-size: 14px;
+    }
+    .su-link {
+        color: #3B82F6;
+        text-decoration: none;
+        font-weight: 700;
+    }
+    nav.navbar, footer { display: none; }
+</style>
+
+<div class="su-container">
+    <a href="{{ url_for('faculty.login') }}" class="back-btn">
+        <i class="fas fa-chevron-left" style="margin-right: 8px;"></i> Back to Login
+    </a>
+
+    <div class="su-card">
+        <div class="su-avatar-container">
+            <div class="su-avatar">
+                <img src="{{ url_for('static', filename='images/faculty_avatar.png') }}" alt="Faculty Avatar">
+            </div>
+        </div>
+        
+        <h1 class="su-title">Faculty Registration</h1>
+        <p class="su-subtitle">Create your faculty account</p>
+
+        <form action="{{ url_for('faculty.signup') }}" method="POST" class="su-form">
+            <div class="su-group">
+                <label class="su-label" for="name">Full Name *</label>
+                <input type="text" id="name" name="name" class="su-input" placeholder="Dr. John Doe" required>
+            </div>
+
+            <div class="su-group">
+                <label class="su-label" for="email">Email Address *</label>
+                <input type="email" id="email" name="email" class="su-input" placeholder="john.doe@university.edu" required>
+            </div>
+
+            <div class="su-group">
+                <label class="su-label" for="phone">Phone Number *</label>
+                <input type="text" id="phone" name="phone" class="su-input" placeholder="+1 234 567 8900" required>
+            </div>
+
+            <div class="su-group">
+                <label class="su-label" for="birthday">Date of Birth *</label>
+                <input type="text" id="birthday" name="birthday" class="su-input" placeholder="dd-mm-yyyy" required>
+            </div>
+
+            <div class="su-group">
+                <label class="su-label" for="department">Department *</label>
+                <select id="department" name="department" class="su-input" required>
+                    <option value="" disabled selected>Select Department</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Literature">Literature</option>
+                    <option value="Engineering">Engineering</option>
+                </select>
+            </div>
+
+            <div class="su-group">
+                <label class="su-label" for="password">Password *</label>
+                <input type="password" id="password" name="password" class="su-input" placeholder="Minimum 6 characters" required>
+            </div>
+
+            <div class="su-group">
+                <label class="su-label" for="confirm_password">Confirm Password *</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="su-input" placeholder="Re-enter password" required>
+            </div>
+
+            <button type="submit" class="su-submit">Create Account</button>
+        </form>
+
+        <div class="su-footer">
+            Already have an account? <a href="{{ url_for('faculty.login') }}" class="su-link">Login here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

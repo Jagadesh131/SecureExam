@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.venv/
+env/
+venv/
+.expo/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment files
+.env
+.env.local
+
+# Build outputs
+dist/
+build/
+*.apk
+*.ipa
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# XAMPP/MySQL local data (if any accidentally copied)
+mysql/data/

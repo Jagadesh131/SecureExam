@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile — MCQ System{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="auth-card border-0 shadow-sm p-4">
+                <h2 class="auth-title mb-4">Edit Profile</h2>
+                
+                <form method="POST" action="{{ url_for('faculty.edit_profile') }}">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-input" value="{{ faculty.name }}" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-input" value="{{ faculty.email }}" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Department</label>
+                        <select name="department" class="form-input" required>
+                            <option value="CSE" {% if faculty.department == 'CSE' %}selected{% endif %}>Computer Science (CSE)</option>
+                            <option value="ECE" {% if faculty.department == 'ECE' %}selected{% endif %}>Electronics (ECE)</option>
+                            <option value="MECH" {% if faculty.department == 'MECH' %}selected{% endif %}>Mechanical (MECH)</option>
+                            <option value="CIVIL" {% if faculty.department == 'CIVIL' %}selected{% endif %}>Civil (CIVIL)</option>
+                            <option value="IT" {% if faculty.department == 'IT' %}selected{% endif %}>Information Tech (IT)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" name="phone" class="form-input" value="{{ faculty.phone }}">
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="form-label">Birthday</label>
+                        <input type="date" name="birthday" class="form-input" value="{{ faculty.birthday }}">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('faculty.my_account') }}" class="btn btn-ghost">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

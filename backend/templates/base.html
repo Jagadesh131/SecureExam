@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SecureExam{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        {% block navbar %}
+        <!-- Simple hidden navbar or header space -->
+        {% endblock %}
+    </header>
+
+    <main class="flex-center">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" style="background: white; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 0.5rem; border-left: 5px solid {% if category == 'error' %}var(--danger){% else %}var(--success){% endif %};">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        {% block footer %}
+        <p style="color: rgba(255,255,255,0.6); text-align: center; padding: 2rem; font-size: 0.8rem;">
+            &copy; {{ now.year if now else '2026' }} University Examination Portal. All rights reserved.
+        </p>
+        {% endblock %}
+    </footer>
+
+    <script>
+        // Common JS logic
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-hide flash messages
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }, 4000);
+            });
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,386 @@
+:root {
+    /* Premium Mission Control Palette */
+    --primary-gradient: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    --bg-gradient: radial-gradient(circle at top, #1E293B 0%, #0F172A 100%);
+    
+    --card-bg: #FFFFFF;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --accent: #6366F1;
+    
+    --faculty-blue: #6366F1;
+    --student-green: #10B981;
+    
+    --danger: #EF4444;
+    --success: #10B981;
+    
+    --radius-xl: 40px;
+    --radius-lg: 32px;
+    --radius-md: 16px;
+    
+    --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* Glassmorphism Classes */
+.glass-container {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Card Styles */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 450px;
+}
+
+/* Typography */
+h1, h2, h3 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.card h1, .card h2, .card h3 {
+    color: var(--text-main);
+}
+
+p.subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid #e1e1e1;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(58, 90, 255, 0.1);
+}
+
+/* Buttons */
+.btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: #3a5aff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2a4aff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(58, 90, 255, 0.3);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1.5px solid #e1e1e1;
+    color: var(--text-main);
+}
+
+.btn-outline:hover {
+    background: #f8f9fa;
+}
+
+/* Layout Utilities */
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.link-group {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.link-group a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Specific Figma Components */
+.role-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.role-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.role-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-right: 1.25rem;
+}
+
+.faculty-icon { background: #3B82F6; color: white; }
+.student-icon { background: #10B981; color: white; }
+
+.role-content h3 {
+    text-align: left;
+    margin-bottom: 0.1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.role-content p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.chevron {
+    margin-left: auto;
+    font-size: 1.1rem;
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: #F9FAFB;
+}
+
+.sidebar {
+    width: 260px;
+    background: white;
+    border-right: 1px solid #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.sidebar-logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #4F46E5;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-md);
+    color: #6B7280;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: #EEF2FF;
+    color: #4F46E5;
+}
+
+.nav-item i {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2.5rem;
+    overflow-y: auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.stat-card .label {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card .value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.exam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.back-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+
+.auth-avatar {
+    width: 80px;
+    height: 80px;
+    background: #3B82F6;
+    border-radius: 50%;
+    margin: -40px auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2.5rem;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    border: 4px solid white;
+}
+
+.demo-credentials {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    background: #F0F7FF;
+    border-radius: var(--radius-md);
+    border: 1px solid #D1E5FF;
+    text-align: center;
+}
+
+.demo-credentials p {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-bottom: 0.5rem;
+}
+
+.demo-credentials .cred-row {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1E3A8A;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate {
+    animation: fadeIn 0.5s ease forwards;
+}

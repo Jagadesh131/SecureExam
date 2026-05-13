@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Exam Not Found{% endblock %}
+
+{% block body %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-logo" style="background: linear-gradient(135deg, var(--danger-600), #991b1b);">!</div>
+        <h2 class="auth-title">Exam Unavailable</h2>
+        <div class="alert alert-warning mb-3">
+            <p><strong>Possible reasons:</strong></p>
+            <ul style="text-align: left; margin-top: 0.5rem; font-size: 0.875rem;">
+                <li>The exam code is incorrect.</li>
+                <li>The exam has not been **Activated** by the faculty.</li>
+                <li>The exam has been removed.</li>
+            </ul>
+        </div>
+        <p class="auth-subtitle">Please contact your faculty for a valid and active exam link.</p>
+        
+        <div class="mt-3">
+            <a href="{{ url_for('faculty.login') }}" class="btn btn-secondary">Go to Faculty Portal</a>
+        </div>
+        
+        <!-- Debug Info (Hidden from students normally, but helpful for setup) -->
+        <div class="mt-3" style="font-size: 0.7rem; color: var(--gray-600);">
+            Debug: 404/500 Error at {{ request.path }}
+        </div>
+    </div>
+</div>
+{% endblock %}

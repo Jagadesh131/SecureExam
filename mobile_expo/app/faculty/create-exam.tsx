@@ -1,0 +1,1 @@
+﻿import React from " react\; import FacultySubScreen from \../../components/FacultySubScreen\; export default function CreateExam() { return ( <FacultySubScreen title=\Create New Exam\ icon=\plus-circle-outline\ /> ); }

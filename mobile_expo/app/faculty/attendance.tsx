@@ -1,0 +1,1 @@
+﻿import React from \react\; import FacultySubScreen from \../../components/FacultySubScreen\; export default function Attendance() { return ( <FacultySubScreen title=\Attendance\ icon=\account-group-outline\ /> ); }

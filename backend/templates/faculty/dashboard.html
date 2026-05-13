@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard — MCQ System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Left Sidebar -->
+    <aside class="left-sidebar">
+        <div class="brand">
+            <div style="font-size: 24px;">🎓</div>
+            <span class="brand-name">SecureExam</span>
+        </div>
+
+        <div class="nav-section">
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item active">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-file-alt"></i> Exams
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i> Questions
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i> Analytics
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">General Tools</div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-list"></i> All Exams
+            </a>
+            <a href="#" class="nav-item" onclick="document.getElementById('createModal').style.display='flex'">
+                <i class="fas fa-plus-circle"></i> Create New Exam
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-book"></i> All Gradebook
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img src="{{ url_for('static', filename='img/faculty_avatar.png') }}" class="user-avatar" alt="Avatar">
+                <div class="user-info">
+                    <span class="user-name">{{ session.faculty_name }}</span>
+                    <span class="user-email">Faculty Portal</span>
+                </div>
+            </div>
+            <a href="{{ url_for('faculty.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-wrapper" style="margin-right: 0;"> <!-- No right sidebar for main dashboard -->
+        <div class="header-meta" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 class="exam-title">Welcome back, Professor!</h1>
+                <div class="exam-subtitle">Dashboard Overview</div>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" placeholder="Search exam" style="padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 8px; width: 200px;">
+                <button class="schedule-btn" onclick="document.getElementById('createModal').style.display='flex'">+ Create Exam</button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Total Exams</div>
+                    <div class="stat-value">{{ exams|length }}</div>
+                </div>
+                <div class="stat-icon" style="color: #6366F1;">
+                    <i class="fas fa-folder"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Active Exams</div>
+                    <div class="stat-value">{{ exams|selectattr('is_active', 'equalto', True)|list|length }}</div>
+                </div>
+                <div class="stat-icon" style="color: #10B981;">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Total Attempts</div>
+                    <div class="stat-value">
+                        {% set total_attempts = 0 %}
+                        {% for e in exams %}{% set total_attempts = total_attempts + e.attempt_count %}{% endfor %}
+                        {{ total_attempts }}
+                    </div>
+                </div>
+                <div class="stat-icon" style="color: #F59E0B;">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 class="quick-actions-title" style="margin-top: 0;">Recent Exams</h2>
+            <a href="#" style="color: #4F46E5; font-size: 14px; font-weight: 600; text-decoration: none;">View All</a>
+        </div>
+
+        {% if exams %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            {% for e in exams %}
+            <div class="calendar-card" style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: {{ '#DEF7EC' if e.is_active else '#FDE8E8' }}; color: {{ '#03543F' if e.is_active else '#9B1C1C' }};">
+                        {{ 'Active' if e.is_active else 'Inactive' }}
+                    </span>
+                    <span style="font-size: 12px; color: #94A3B8;">{{ e.exam_code }}</span>
+                </div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #1E293B;">{{ e.exam_name }}</h3>
+                <p style="margin: 0 0 20px 0; color: #64748B; font-size: 14px;">{{ e.subject }} • {{ e.duration }} min</p>
+                
+                <div style="display: flex; gap: 10px;">
+                    <a href="{{ url_for('faculty.exam_detail', exam_code=e.exam_code) }}" class="schedule-btn" style="flex: 1; text-align: center; background: #F1F5F9; color: #475569; text-decoration: none; font-size: 13px;">Manage</a>
+                    <a href="{{ url_for('faculty.exam_results', exam_code=e.exam_code) }}" class="schedule-btn" style="flex: 1; text-align: center; text-decoration: none; font-size: 13px;">Results</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="calendar-card" style="text-align: center; padding: 60px;">
+            <i class="fas fa-plus-circle" style="font-size: 48px; color: #E2E8F0; margin-bottom: 16px;"></i>
+            <h3 style="color: #475569;">No exams created yet</h3>
+            <p style="color: #94A3B8; margin-bottom: 24px;">Start by creating your first examination.</p>
+            <button class="schedule-btn" onclick="document.getElementById('createModal').style.display='flex'">Create Now</button>
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<!-- Create Exam Modal -->
+<div id="createModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:450px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3 style="margin:0;">Create New Exam</h3>
+            <button onclick="document.getElementById('createModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('faculty.create_exam') }}">
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Exam Name</label>
+                <input type="text" name="exam_name" placeholder="e.g. Mid-Semester Test 1" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Subject</label>
+                <input type="text" name="subject" placeholder="e.g. Data Structures" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Duration (min)</label>
+                <input type="number" name="duration" value="30" min="5" max="180" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <button type="submit" class="schedule-btn" style="width: 100%; padding: 14px;">Create Exam</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('createModal').addEventListener('click', (e) => { if(e.target === document.getElementById('createModal')) e.target.style.display='none' });
+</script>
+
+</body>
+</html>
