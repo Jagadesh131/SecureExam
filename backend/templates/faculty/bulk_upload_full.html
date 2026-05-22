@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ exam.exam_name }} — Bulk Upload CSV</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+    <style>
+        .upload-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .upload-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0F172A;
+            margin-bottom: 20px;
+        }
+        .upload-zone {
+            border: 2px dashed #3B82F6;
+            background-color: #F0F9FF;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .upload-zone:hover {
+            background-color: #E0F2FE;
+        }
+        .upload-icon {
+            font-size: 48px;
+            color: #3B82F6;
+            margin-bottom: 12px;
+        }
+        .upload-text {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 16px;
+        }
+        .choose-file-btn {
+            background-color: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: inline-block;
+        }
+        .choose-file-btn:hover {
+            background-color: #2563EB;
+        }
+        #file-input {
+            display: none;
+        }
+        .file-name-display {
+            font-size: 13px;
+            color: #0F172A;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        .template-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #F8FAFC;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .template-text {
+            font-size: 13px;
+            color: #64748B;
+        }
+        .template-link {
+            font-size: 13px;
+            color: #3B82F6;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .template-link:hover {
+            text-decoration: underline;
+        }
+        .submit-btn {
+            background-color: #10B981;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+            transition: background 0.2s ease;
+            display: none; /* Hidden until file selected */
+        }
+        .submit-btn:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <aside class="left-sidebar">
+        <div class="brand"><div style="font-size: 24px;">🎓</div><span class="brand-name">SecureExam</span></div>
+        <div class="active-exam-box" style="padding: 0 16px; margin-bottom: 24px;">
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">ACTIVE EXAM</div>
+                <div style="color: white; font-size: 14px; font-weight: 700;">{{ exam.exam_name }}</div>
+                <div style="font-size: 11px; color: #3B82F6;">{{ exam.exam_code }}</div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Exam Management</div>
+            <a href="{{ url_for('faculty.exam_settings', exam_code=exam.exam_code) }}" class="nav-item">
+                <i class="fas fa-cog"></i> <span class="nav-text">Exam Settings</span>
+            </a>
+            <a href="{{ url_for('faculty.edit_exam', exam_code=exam.exam_code) }}" class="nav-item">
+                <i class="fas fa-edit"></i> <span class="nav-text">Edit Exam</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Question Management</div>
+            <a href="{{ url_for('faculty.manage_questions', exam_code=exam.exam_code) }}" class="nav-item">
+                <i class="fas fa-tasks"></i> <span class="nav-text">Manage Questions</span>
+            </a>
+            <a href="{{ url_for('faculty.bulk_upload', exam_code=exam.exam_code) }}" class="nav-item" style="background: rgba(59,130,246,0.1); color: white; border-left: 3px solid #3B82F6;">
+                <i class="fas fa-file-upload" style="color: #3B82F6;"></i> <span class="nav-text">Bulk Upload CSV</span>
+            </a>
+            <a href="{{ url_for('faculty.categories', exam_code=exam.exam_code) }}" class="nav-item"><i class="fas fa-tags"></i> <span class="nav-text">Categories</span></a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Results & Analytics</div>
+            <a href="{{ url_for('faculty.exam_results', exam_code=exam.exam_code) }}" class="nav-item"><i class="fas fa-poll"></i> <span class="nav-text">Exam Results</span></a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">General Tools</div>
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item"><i class="fas fa-list"></i> <span class="nav-text">All Exams</span></a>
+            <a href="#" class="nav-item"><i class="fas fa-plus-circle"></i> <span class="nav-text">Create New Exam</span></a>
+        </div>
+    </aside>
+
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="content-container" style="max-width: 800px; margin: 0 auto; padding-top: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 24px; margin-left: -20px;">
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="margin-bottom: 20px;">
+                  {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="upload-card">
+            <div class="upload-title">Bulk Upload Questions</div>
+            
+            <form action="{{ url_for('faculty.bulk_upload', exam_code=exam.exam_code) }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-zone" id="dropZone" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <div class="upload-text">Drop CSV file here or click to browse</div>
+                    <div class="choose-file-btn">Choose File</div>
+                    <input type="file" id="file-input" name="file" accept=".csv" onchange="handleFileSelect(this)">
+                    <div class="file-name-display" id="fileNameDisplay"></div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">Upload Questions</button>
+            </form>
+
+            <div class="template-box">
+                <span class="template-text">Need a template?</span>
+                <a href="{{ url_for('faculty.download_template', exam_code=exam.exam_code) }}" class="template-link">Download Sample CSV</a>
+            </div>
+        </div>
+
+        </div>
+
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        const main = document.getElementById('mainWrapper');
+        if (document.querySelector('.left-sidebar').classList.contains('collapsed')) {
+            main.classList.add('expanded');
+        } else {
+            main.classList.remove('expanded');
+        }
+    }
+
+    function handleFileSelect(input) {
+        const display = document.getElementById('fileNameDisplay');
+        const submitBtn = document.getElementById('submitBtn');
+        if (input.files && input.files.length > 0) {
+            display.innerText = "Selected: " + input.files[0].name;
+            submitBtn.style.display = 'block';
+        } else {
+            display.innerText = "";
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    // Basic drag and drop styling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = '#E0F2FE';
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = '#F0F9FF';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = '#F0F9FF';
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect(fileInput);
+        }
+    });
+</script>
+
+</body>
+</html>

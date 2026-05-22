@@ -129,6 +129,16 @@ def init_db():
         FOREIGN KEY (faculty_id) REFERENCES faculty (faculty_id) ON DELETE CASCADE
     )''')
 
+    # 3.5. Categories Table
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        exam_code VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        color VARCHAR(20) DEFAULT '#3B82F6',
+        FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
+    )''')
+
     # 4. Questions Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS questions (
@@ -141,8 +151,21 @@ def init_db():
         option_d TEXT NOT NULL,
         correct_answer TEXT NOT NULL,
         difficulty VARCHAR(255) DEFAULT 'Medium',
-        FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
+        category_id INT NULL,
+        FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
     )''')
+
+    # Ensure category_id exists if the table was created previously
+    try:
+        conn.execute("ALTER TABLE questions ADD COLUMN category_id INT NULL")
+    except Exception:
+        pass
+        
+    try:
+        conn.execute("ALTER TABLE questions ADD FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL")
+    except Exception:
+        pass
 
     # 5. Student Attempts Table
     conn.execute('''

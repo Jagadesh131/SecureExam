@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Exam</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+    <style>
+        .settings-card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #E2E8F0; }
+        .settings-card h3 { margin-top: 0; color: #0F172A; font-size: 18px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .input-control { width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; box-sizing: border-box; }
+        .save-btn { background: #1D61FF; color: white; border: none; border-radius: 8px; padding: 14px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer; transition: all 0.2s; }
+        .save-btn:hover { background: #1550DF; }
+        .cancel-btn { background: #E2E8F0; color: #475569; border: none; border-radius: 8px; padding: 14px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer; text-align: center; text-decoration: none; display: block; box-sizing: border-box;}
+        .cancel-btn:hover { background: #CBD5E1; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    {% set active_exam = exam %}
+    {% include 'faculty/components/sidebar.html' %}
+
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="content-container" style="max-width: 800px; margin: 0 auto; padding-top: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 24px; margin-left: -20px;">
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div style="padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; font-size: 14px;
+                  {% if category == 'success' %}background-color: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;
+                  {% elif category == 'error' %}background-color: #FEF2F2; color: #991B1B; border: 1px solid #FECACA;
+                  {% else %}background-color: #F0F9FF; color: #075985; border: 1px solid #BAE6FD;{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('faculty.edit_exam', exam_code=exam.exam_code) }}">
+            <div class="settings-card">
+                <h3>Edit Exam</h3>
+                
+                <div class="input-group">
+                    <label>Exam Name *</label>
+                    <input type="text" name="exam_name" class="input-control" value="{{ exam.exam_name }}" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Subject *</label>
+                    <input type="text" name="subject" class="input-control" value="{{ exam.subject }}" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="input-group">
+                        <label>Duration (minutes) *</label>
+                        <input type="number" name="duration" class="input-control" value="{{ exam.duration }}" min="5" max="180" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Passing Percentage *</label>
+                        <input type="number" name="passing_percentage" class="input-control" value="{{ exam.passing_percentage or 40 }}" min="1" max="100" readonly style="background: #F8FAFC; color: #64748B; cursor: not-allowed;" title="Use Exam Settings to edit passing percentage">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Instructions</label>
+                    <textarea name="instructions" rows="4" class="input-control" readonly style="background: #F8FAFC; color: #64748B; cursor: not-allowed;" title="Use Exam Settings to edit instructions">{{ exam.instructions or '' }}</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
+                    <button type="submit" class="save-btn">Update Exam</button>
+                    <a href="{{ url_for('faculty.exam_detail', exam_code=exam.exam_code) }}" class="cancel-btn">Cancel</a>
+                </div>
+            </div>
+        </form>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        const main = document.getElementById('mainWrapper');
+        if (document.querySelector('.left-sidebar').classList.contains('collapsed')) {
+            main.classList.add('expanded');
+        } else {
+            main.classList.remove('expanded');
+        }
+    }
+</script>
+
+</body>
+</html>

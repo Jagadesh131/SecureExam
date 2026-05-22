@@ -12,94 +12,19 @@
 
 <div class="dashboard-container">
     <!-- Left Sidebar -->
-    <aside class="left-sidebar">
-        <div class="brand">
-            <div style="font-size: 24px;">🎓</div>
-            <span class="brand-name">SecureExam</span>
-        </div>
-
-        <!-- Active Exam Selector -->
-        <div style="padding: 0 16px; margin-bottom: 24px;">
-            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">ACTIVE EXAM</div>
-                <div style="color: white; font-size: 14px; font-weight: 700;">{{ exam.exam_name }}</div>
-                <div style="font-size: 11px; color: #3B82F6;">{{ exam.exam_code }}</div>
-            </div>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">Exam Management</div>
-            <a href="#" class="nav-item">
-                <i class="fas fa-cog"></i> Exam Settings
-            </a>
-            <a href="#" class="nav-item" onclick="document.getElementById('editModal').style.display='flex'">
-                <i class="fas fa-edit"></i> Edit Exam
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">Question Management</div>
-            <a href="#" class="nav-item" onclick="document.getElementById('manageQModal').style.display='flex'">
-                <i class="fas fa-tasks"></i> Manage Questions
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-file-upload"></i> Bulk Upload CSV
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-tags"></i> Categories
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">Results & Analytics</div>
-            <a href="{{ url_for('faculty.exam_results', exam_code=exam.exam_code) }}" class="nav-item">
-                <i class="fas fa-poll"></i> Exam Results
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-users"></i> Attendance
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-chart-pie"></i> Analytics
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-file-export"></i> Export Report
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">General Tools</div>
-            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
-                <i class="fas fa-list"></i> All Exams
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-plus-circle"></i> Create New Exam
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-book"></i> All Gradebook
-            </a>
-        </div>
-
-        <div class="sidebar-footer">
-            <div class="user-profile">
-                <img src="{{ url_for('static', filename='img/faculty_avatar.png') }}" class="user-avatar" alt="Avatar">
-                <div class="user-info">
-                    <span class="user-name">{{ session.faculty_name }}</span>
-                    <span class="user-email">Faculty Portal</span>
-                </div>
-            </div>
-            <a href="{{ url_for('faculty.logout') }}" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </aside>
+    {% set active_exam = exam %}
+    {% include 'faculty/components/sidebar.html' %}
 
     <!-- Main Content -->
-    <main class="main-wrapper">
-        <div class="header-meta">
-            <h1 class="exam-title">{{ exam.exam_name }}</h1>
-            <div class="exam-subtitle">
-                Exam Code: <span style="font-weight: 700;">{{ exam.exam_code }}</span> | 
-                Subject: <span style="font-weight: 700;">{{ exam.subject }}</span>
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="header-meta" style="display: flex; align-items: flex-start;">
+            <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <div>
+                <h1 class="exam-title">{{ exam.exam_name }}</h1>
+                <div class="exam-subtitle">
+                    Exam Code: <span style="font-weight: 700;">{{ exam.exam_code }}</span> | 
+                    Subject: <span style="font-weight: 700;">{{ exam.subject }}</span>
+                </div>
             </div>
         </div>
 
@@ -194,7 +119,7 @@
             <a href="{{ url_for('faculty.exam_results', exam_code=exam.exam_code) }}" class="action-btn">
                 <i class="fas fa-poll-h"></i> View Results
             </a>
-            <a href="#" class="action-btn">
+            <a href="#" class="action-btn" onclick="document.getElementById('settingsModal').style.display='flex'">
                 <i class="fas fa-sliders-h"></i> Exam Settings
             </a>
             <a href="#" class="action-btn">
@@ -232,21 +157,57 @@
 
 <!-- Modal for Managing Questions -->
 <div id="manageQModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:700px; max-height:85vh; overflow-y:auto;">
+    <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:800px; max-height:85vh; overflow-y:auto;">
         <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
             <h3>Manage Questions ({{ questions|length }})</h3>
             <button onclick="document.getElementById('manageQModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
         </div>
         
+        <div style="margin-bottom: 24px; padding: 20px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0;">
+            <h4 style="margin-top: 0; color: #0F172A;">Add New Question</h4>
+            <form method="POST" action="{{ url_for('faculty.add_question', exam_code=exam.exam_code) }}">
+                <input type="text" name="question_text" placeholder="Question Text" style="width:100%; padding:10px; margin-bottom:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <input type="text" name="option_a" placeholder="Option A" style="padding:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                    <input type="text" name="option_b" placeholder="Option B" style="padding:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                    <input type="text" name="option_c" placeholder="Option C" style="padding:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                    <input type="text" name="option_d" placeholder="Option D" style="padding:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                </div>
+                <div style="display:flex; gap: 10px; align-items: center; margin-bottom:10px;">
+                    <select name="correct_answer" style="flex:1; padding:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                        <option value="">Select Correct Answer</option>
+                        <option value="A">Option A</option>
+                        <option value="B">Option B</option>
+                        <option value="C">Option C</option>
+                        <option value="D">Option D</option>
+                    </select>
+                    <select name="difficulty" style="flex:1; padding:10px; border-radius:6px; border:1px solid #CBD5E1;" required>
+                        <option value="Medium">Medium</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                    <button type="submit" class="schedule-btn" style="flex:1; padding: 10px;">Add Question</button>
+                </div>
+            </form>
+        </div>
+
         {% if questions %}
             {% for q in questions %}
             <div style="padding:15px; border-bottom:1px solid #eee;">
-                <p style="margin-bottom:8px;"><strong>{{ loop.index }}.</strong> {{ q.question_text }}</p>
+                <div style="display: flex; justify-content: space-between;">
+                    <p style="margin-bottom:8px;"><strong>{{ loop.index }}.</strong> {{ q.question_text }}</p>
+                    <form method="POST" action="{{ url_for('faculty.delete_question', exam_code=exam.exam_code, q_id=q.id) }}" style="display:inline;" onsubmit="return confirm('Delete this question?');">
+                        <button type="submit" style="color: #EF4444; background: none; border: none; cursor: pointer; font-size: 14px;"><i class="fas fa-trash"></i> Delete</button>
+                    </form>
+                </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px; color:#64748B;">
                     <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'A' else '' }}">A: {{ q.option_a }}</div>
                     <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'B' else '' }}">B: {{ q.option_b }}</div>
                     <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'C' else '' }}">C: {{ q.option_c }}</div>
                     <div style="{{ 'color:#10B981; font-weight:700;' if q.correct_answer == 'D' else '' }}">D: {{ q.option_d }}</div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <span style="font-size: 11px; background: #DBEAFE; color: #1D4ED8; padding: 2px 8px; border-radius: 4px;">{{ q.difficulty or 'Medium' }}</span>
                 </div>
             </div>
             {% endfor %}
@@ -281,11 +242,46 @@
     </div>
 </div>
 
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:24px; width:90%; max-width:500px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3 style="margin:0;">Exam Settings</h3>
+            <button onclick="document.getElementById('settingsModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('faculty.exam_settings', exam_code=exam.exam_code) }}">
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Instructions</label>
+                <textarea name="instructions" rows="3" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" placeholder="Enter exam instructions...">{{ exam.instructions or '' }}</textarea>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Passing Percentage</label>
+                <input type="number" name="passing_percentage" value="{{ exam.passing_percentage or 40 }}" min="1" max="100" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
+            </div>
+            <div style="margin-bottom: 15px; display:flex; align-items:center; justify-content:space-between;">
+                <label style="font-size:13px; font-weight:700;">Randomize Questions</label>
+                <input type="checkbox" name="randomize_questions" value="1" {% if exam.randomize_questions %}checked{% endif %} style="transform: scale(1.3);">
+            </div>
+            <div style="margin-bottom: 20px; display:flex; align-items:center; justify-content:space-between;">
+                <label style="font-size:13px; font-weight:700;">Shuffle Options</label>
+                <input type="checkbox" name="shuffle_options" value="1" {% if exam.shuffle_options %}checked{% endif %} style="transform: scale(1.3);">
+            </div>
+            <button type="submit" class="schedule-btn" style="width: 100%; padding: 14px;">Save Settings</button>
+        </form>
+    </div>
+</div>
+
 <script>
     // Simple modal toggles
     document.querySelectorAll('.modal-overlay').forEach(m => {
         m.addEventListener('click', (e) => { if(e.target === m) m.style.display='none' });
     });
+
+    // Sidebar Toggle
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        document.getElementById('mainWrapper').classList.toggle('expanded');
+    }
 </script>
 
 </body>

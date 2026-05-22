@@ -1,0 +1,140 @@
+<aside class="left-sidebar">
+    {% if active_exam %}
+    <!-- STATE 1: Simplified Context Sidebar -->
+    <div class="brand"><div style="font-size: 24px;">🎓</div><span class="brand-name">SecureExam</span></div>
+    
+    <div class="active-exam-box" style="padding: 0 16px; margin-bottom: 24px;">
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">QUICK ACCESS</div>
+            <div style="color: white; font-size: 14px; font-weight: 700;">{{ active_exam.exam_name }}</div>
+            <div style="font-size: 11px; color: var(--accent);">{{ active_exam.exam_code }}</div>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Exam Management</div>
+        <a href="{{ url_for('faculty.exam_settings', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-cog"></i> <span class="nav-text">Exam Settings</span>
+        </a>
+        <a href="{{ url_for('faculty.edit_exam', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-edit"></i> <span class="nav-text">Edit Exam</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Question Management</div>
+        <a href="{{ url_for('faculty.manage_questions', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-tasks"></i> <span class="nav-text">Manage Questions</span>
+        </a>
+        <a href="{{ url_for('faculty.bulk_upload', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-file-upload"></i> <span class="nav-text">Bulk Upload CSV</span>
+        </a>
+        <a href="{{ url_for('faculty.categories', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-tags"></i> <span class="nav-text">Categories</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Results & Analytics</div>
+        <a href="{{ url_for('faculty.exam_results', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-poll"></i> <span class="nav-text">Exam Results</span>
+        </a>
+        <a href="{{ url_for('faculty.student_attendance', exam_code=active_exam.exam_code) }}" class="nav-item">
+            <i class="fas fa-user-check"></i> <span class="nav-text">Attendance</span>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">General Tools</div>
+        <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
+            <i class="fas fa-list"></i> <span class="nav-text">All Exams</span>
+        </a>
+        <a href="{{ url_for('faculty.create_exam_view') }}" class="nav-item">
+            <i class="fas fa-plus-circle"></i> <span class="nav-text">Create New Exam</span>
+        </a>
+    </div>
+
+    {% else %}
+    <!-- STATE 2: Advanced Context Sidebar -->
+    <div class="brand" style="margin-bottom: 16px;">
+        <div style="font-size: 24px;">🎓</div>
+        <div style="display:flex; flex-direction:column; margin-left: 12px;">
+            <span class="brand-name" style="margin-left: 0;">SecureExam</span>
+        </div>
+        <span class="portal-badge">FACULTY PORTAL</span>
+    </div>
+
+    <div class="nav-section">
+        <a href="{{ url_for('faculty.dashboard') }}" class="nav-item {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i> <span class="nav-text">Dashboard</span>
+        </a>
+
+        <!-- Exam Management Accordion -->
+        <div class="nav-item nav-accordion" onclick="toggleAccordion(this)">
+            <div><i class="fas fa-folder"></i> <span class="nav-text">Exam Management</span></div>
+            <i class="fas fa-chevron-down" style="width: auto; margin: 0; font-size: 10px;"></i>
+        </div>
+        <div class="nav-accordion-content">
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">Exam List</a>
+            <a href="{{ url_for('faculty.create_exam_view') }}" class="nav-item">Create Exam</a>
+        </div>
+
+        <!-- Question Management Accordion -->
+        <div class="nav-item nav-accordion" onclick="toggleAccordion(this)">
+            <div><i class="fas fa-database"></i> <span class="nav-text">Question Management</span></div>
+            <i class="fas fa-chevron-down" style="width: auto; margin: 0; font-size: 10px;"></i>
+        </div>
+        <div class="nav-accordion-content">
+            <a href="#" class="nav-item">Question Bank</a>
+            <a href="#" class="nav-item">Exam Templates</a>
+        </div>
+
+        <!-- Results & Analytics Accordion -->
+        <div class="nav-item nav-accordion {% if 'analytics' in request.endpoint or 'reports' in request.endpoint %}active{% endif %}" onclick="toggleAccordion(this)">
+            <div><i class="fas fa-chart-pie"></i> <span class="nav-text">Analytics</span></div>
+            <i class="fas fa-chevron-down" style="width: auto; margin: 0; font-size: 10px;"></i>
+        </div>
+        <div class="nav-accordion-content {% if 'analytics' in request.endpoint or 'reports' in request.endpoint %}expanded{% endif %}">
+            <a href="{{ url_for('faculty.performance_trends') }}" class="nav-item">Class Analytics</a>
+            <a href="#" class="nav-item">Performance Trends</a>
+        </div>
+
+        <!-- Reports Accordion -->
+        <div class="nav-item nav-accordion {% if 'export' in request.endpoint %}active{% endif %}" onclick="toggleAccordion(this)">
+            <div><i class="fas fa-file-alt"></i> <span class="nav-text">Reports</span></div>
+            <i class="fas fa-chevron-down" style="width: auto; margin: 0; font-size: 10px;"></i>
+        </div>
+        <div class="nav-accordion-content {% if 'export' in request.endpoint %}expanded{% endif %}">
+            <a href="{{ url_for('faculty.export_reports') }}" class="nav-item">Export Reports</a>
+            <a href="#" class="nav-item">Custom Reports</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="avatar">{{ session.get('faculty_name', 'Faculty')[0] }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ session.get('faculty_name', 'Demo Faculty') }}</div>
+                <div class="user-role">Faculty Member</div>
+            </div>
+        </div>
+        <a href="{{ url_for('faculty.logout') }}" style="text-decoration:none;">
+            <div class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </div>
+        </a>
+    </div>
+</aside>
+
+<script>
+function toggleAccordion(element) {
+    element.classList.toggle('active');
+    var content = element.nextElementSibling;
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+    }
+}
+</script>

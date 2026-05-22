@@ -1,71 +1,182 @@
-{% extends "base.html" %}
-{% block title %}Results — {{ exam.exam_name }}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results — {{ exam.exam_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #E2E8F0;
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0F172A;
+        }
+        .stat-value.success { color: var(--emerald-green); }
+        .stat-value.danger { color: #EF4444; }
 
-{% block body %}
-<div class="page-wrapper">
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-brand">
-                <div class="brand-icon">📚</div>
-                Faculty Portal
-            </div>
-            <div class="navbar-links">
-                <a href="{{ url_for('faculty.dashboard') }}">My Exams</a>
-                <a href="{{ url_for('faculty.change_password') }}">Password</a>
-                <a href="{{ url_for('faculty.logout') }}" class="nav-danger">Logout</a>
-            </div>
-        </div>
-    </nav>
+        .results-panel {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            overflow: hidden;
+        }
+        .results-header {
+            padding: 16px 24px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #0F172A;
+        }
+        .result-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #F1F5F9;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .result-row:hover { background: #F8FAFC; }
+        .result-row.pass { border-left: 4px solid var(--emerald-green); }
+        .result-row.fail { border-left: 4px solid #EF4444; }
+        
+        .student-name { font-weight: 600; color: #0F172A; font-size: 15px; }
+        .reg-number { font-size: 13px; color: #64748B; margin-top: 2px; }
+        
+        .data-value { font-size: 14px; font-weight: 500; color: #334155; }
+        .data-label { font-size: 11px; color: #94A3B8; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        
+        .badge-fail { background: #FEE2E2; color: #DC2626; }
+    </style>
+</head>
+<body>
 
-    <main class="main-content">
-        <div class="container section">
-            <div class="section-header">
-                <div>
-                    <h1 class="section-title">{{ exam.exam_name }} — Results</h1>
-                    <p class="text-muted text-sm">{{ exam.subject }} | {{ exam.exam_code }}</p>
+<div class="dashboard-container">
+    {% set active_exam = exam %}
+    {% include 'faculty/components/sidebar.html' %}
+
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="content-container" style="max-width: 1000px; margin: 0 auto; padding-top: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 24px; margin-left: -20px;">
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+            
+            <div class="banner-purple">
+                <a href="{{ url_for('faculty.exam_detail', exam_code=exam.exam_code) }}" style="margin-bottom: 16px;"><i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Dashboard</a>
+                <h2>Results: {{ exam.exam_name }}</h2>
+                <div style="opacity: 0.9; font-size: 14px;">Subject: {{ exam.subject }} | Code: {{ exam.exam_code }}</div>
+            </div>
+
+            {% set total = results|length %}
+            {% set passed = [] %}
+            {% set total_score = [0] %}
+            
+            {% for r in results %}
+                {% if r.percentage >= (exam.passing_percentage or 40) %}
+                    {% set _ = passed.append(1) %}
+                {% endif %}
+                {% if total_score.append(total_score.pop() + r.percentage) %}{% endif %}
+            {% endfor %}
+            
+            {% set num_passed = passed|length %}
+            {% set num_failed = total - num_passed %}
+            {% set avg = (total_score[0] / total)|round(1) if total > 0 else 0 %}
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Attempts</div>
+                    <div class="stat-value">{{ total }}</div>
                 </div>
-                <a href="{{ url_for('faculty.exam_detail', exam_code=exam.exam_code) }}" class="btn btn-ghost">← Back to Exam</a>
+                <div class="stat-card">
+                    <div class="stat-label">Passed</div>
+                    <div class="stat-value success">{{ num_passed }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Failed</div>
+                    <div class="stat-value danger">{{ num_failed }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average</div>
+                    <div class="stat-value">{{ avg }}%</div>
+                </div>
             </div>
 
-            {% if results %}
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Student Name</th>
-                            <th>Reg. Number</th>
-                            <th>Score</th>
-                            <th>Percentage</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in results %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
-                            <td><strong>{{ r.student_name }}</strong></td>
-                            <td>{{ r.reg_number }}</td>
-                            <td>{{ r.score }} / {{ r.total_questions }}</td>
-                            <td>
-                                <span class="badge {{ 'badge-active' if r.percentage >= 50 else 'badge-inactive' }}">
-                                    {{ "%.1f"|format(r.percentage) }}%
-                                </span>
-                            </td>
-                            <td class="text-muted">{{ r.attempt_date }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="results-panel">
+                <div class="results-header">Student Results ({{ total }})</div>
+                {% if results %}
+                    {% for r in results %}
+                    {% set is_pass = r.percentage >= (exam.passing_percentage or 40) %}
+                    <div class="result-row {{ 'pass' if is_pass else 'fail' }}">
+                        <div>
+                            <div class="student-name">{{ r.student_name }}</div>
+                            <div class="reg-number">{{ r.reg_number }}</div>
+                        </div>
+                        <div>
+                            <span class="data-label">Timestamp</span>
+                            <span class="data-value">{{ r.attempt_date.split('T')[0] if 'T' in r.attempt_date else r.attempt_date }}</span>
+                        </div>
+                        <div>
+                            <span class="data-label">Score</span>
+                            <span class="data-value">{{ r.score }} / {{ r.total_questions }}</span>
+                        </div>
+                        <div>
+                            <span class="data-label">Percentage</span>
+                            <span class="data-value" style="font-weight: 700;">{{ "%.1f"|format(r.percentage) }}%</span>
+                        </div>
+                        <div style="text-align: right;">
+                            {% if is_pass %}
+                            <span class="pill-badge pill-success">PASS</span>
+                            {% else %}
+                            <span class="pill-badge badge-fail">FAIL</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="padding: 40px; text-align: center; color: #64748B;">No results found for this exam.</div>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">📊</div>
-                <h3>No Results Yet</h3>
-                <p class="text-muted mt-1">No students have attempted this exam.</p>
-            </div>
-            {% endif %}
+            
         </div>
     </main>
 </div>
-{% endblock %}
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        const main = document.getElementById('mainWrapper');
+        if (document.querySelector('.left-sidebar').classList.contains('collapsed')) {
+            main.classList.add('expanded');
+        } else {
+            main.classList.remove('expanded');
+        }
+    }
+</script>
+
+</body>
+</html>

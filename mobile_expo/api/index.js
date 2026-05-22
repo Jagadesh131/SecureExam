@@ -89,6 +89,13 @@ export const ApiService = {
     });
   },
 
+  updateExamSettings: async (examCode, settingsData) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/settings`, {
+      method: 'POST',
+      body: JSON.stringify(settingsData),
+    });
+  },
+
   toggleExam: async (examCode) => {
     return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/toggle`, {
       method: 'POST',
@@ -103,6 +110,19 @@ export const ApiService = {
     return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/question/add`, {
       method: 'POST',
       body: JSON.stringify(questionData),
+    });
+  },
+  
+  updateQuestion: async (examCode, questionId, questionData) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/question/${questionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(questionData),
+    });
+  },
+
+  deleteQuestion: async (examCode, questionId) => {
+    return fetchWithTimeout(`${BASE_URL}/faculty/exam/${examCode}/question/${questionId}`, {
+      method: 'DELETE',
     });
   },
 

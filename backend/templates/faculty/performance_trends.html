@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Trends — Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+    <style>
+        .analytics-panel {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            overflow: hidden;
+            margin-bottom: 24px;
+            padding: 24px;
+        }
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0F172A;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        .chart-canvas {
+            background: #F8FAFC;
+            border: 2px dashed #CBD5E1;
+            border-radius: 8px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            color: #64748B;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748B;
+            border-bottom: 1px solid #E2E8F0;
+            text-transform: uppercase;
+        }
+        .data-table td {
+            padding: 16px;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 14px;
+            color: #334155;
+            vertical-align: middle;
+        }
+        .data-table tr:hover {
+            background-color: #F8FAFC;
+        }
+        
+        .val-student { color: var(--accent); font-weight: 600; }
+        .val-diff-pos { color: var(--emerald-green); font-weight: 700; }
+        .val-diff-neg { color: #EF4444; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- State 2 Sidebar automatically triggered by omitting active_exam -->
+    {% include 'faculty/components/sidebar.html' %}
+
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="content-container" style="max-width: 1000px; margin: 0 auto; padding-top: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 24px; margin-left: -20px;">
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+            
+            <div class="analytics-panel">
+                <h2 class="panel-title">Performance Trends</h2>
+                
+                <div class="chart-canvas">
+                    📈 Line Chart: Student Performance Over Time (Chart library would render here in production)
+                </div>
+                
+                <h3 style="font-size: 15px; color: #0F172A; margin-bottom: 16px;">Historical Metrics</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Student Average</th>
+                            <th>Class Average</th>
+                            <th>Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if exams %}
+                            {% for e in exams %}
+                            <!-- Mocking data since specific student trends require complex query -->
+                            {% set student_avg = 75 + loop.index %}
+                            {% set class_avg = 72 %}
+                            {% set diff = student_avg - class_avg %}
+                            <tr>
+                                <td style="font-weight: 600;">{{ e.exam_name }}</td>
+                                <td class="val-student">{{ student_avg }}%</td>
+                                <td>{{ class_avg }}%</td>
+                                <td class="{{ 'val-diff-pos' if diff > 0 else 'val-diff-neg' }}">
+                                    {{ '+' if diff > 0 else '' }}{{ diff }}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 30px; color: #64748B;">No exams available to analyze.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        const main = document.getElementById('mainWrapper');
+        if (document.querySelector('.left-sidebar').classList.contains('collapsed')) {
+            main.classList.add('expanded');
+        } else {
+            main.classList.remove('expanded');
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, useWindowDimensions, Platform, ActivityIndicator, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../constants/theme';
 import { ApiService } from '../api';
-
+import FacultySidebar from '../components/FacultySidebar';
 export default function FacultyDashboardScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
@@ -14,6 +14,7 @@ export default function FacultyDashboardScreen() {
   const [activeMenu, setActiveMenu] = useState('All Exams');
   const [dashboardStats, setDashboardStats] = useState({ total_exams: 0, active_exams: 0, total_attempts: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -31,111 +32,20 @@ export default function FacultyDashboardScreen() {
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
-
-  // Sidebar Component (Dark Theme as per screenshot)
-  const Sidebar = () => (
-    <View style={styles.sidebar}>
-      <View style={styles.sidebarTop}>
-        <View style={styles.sidebarHeader}>
-          <TouchableOpacity style={styles.closeBtn}>
-            <MaterialCommunityIcons name="close" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.sidebarHeaderLabel}>EXAM ACCESS</Text>
-        </View>
-
-        <TouchableOpacity style={styles.dropdownSelector}>
-          <Text style={styles.dropdownTitle}>Data Structures Midterm</Text>
-          <MaterialCommunityIcons name="chevron-down" size={20} color="#94A3B8" />
-        </TouchableOpacity>
-        
-        <View style={styles.activeExamBadge}>
-          <Text style={styles.activeExamTitle}>Data Structures Midterm</Text>
-          <Text style={styles.activeExamCode}>CS101-MID-2024</Text>
-        </View>
-
-        <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
-          <Text style={styles.menuSection}>Exam Management</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/settings')}>
-            <MaterialCommunityIcons name="cog-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Exam Settings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/manage-questions')}>
-            <MaterialCommunityIcons name="pencil-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Edit Exam</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.menuSection}>Question Management</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/manage-questions')}>
-            <MaterialCommunityIcons name="file-document-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Manage Questions</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <MaterialCommunityIcons name="upload-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Bulk Upload CSV</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <MaterialCommunityIcons name="tag-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Categories</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.menuSection}>Results & Analytics</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/exam-results')}>
-            <MaterialCommunityIcons name="poll" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Exam Results</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/attendance')}>
-            <MaterialCommunityIcons name="account-group-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Attendance</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/analytics')}>
-            <MaterialCommunityIcons name="chart-line" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Analytics</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/exam-results')}>
-            <MaterialCommunityIcons name="file-export-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Export Report</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.menuSection}>General Tools</Text>
-          <TouchableOpacity style={styles.menuItem}>
-            <MaterialCommunityIcons name="folder-multiple-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>All Exams</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faculty/create-exam')}>
-            <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#94A3B8" />
-            <Text style={styles.menuText}>Create New Exam</Text>
-          </TouchableOpacity>
-          <View style={{height: 100}} />
-        </ScrollView>
-      </View>
-
-      <View style={styles.sidebarBottom}>
-        <View style={styles.profileBox}>
-          <View style={styles.avatarMini}>
-            <MaterialCommunityIcons name="account" size={20} color="white" />
-          </View>
-          <View style={{flex: 1}}>
-            <Text style={styles.profileName}>Demo Faculty</Text>
-            <Text style={styles.profileEmail}>faculty@university.edu</Text>
-          </View>
-          <TouchableOpacity>
-            <MaterialCommunityIcons name="cog" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={() => router.replace('/')}>
-          <View style={styles.logoutContent}>
-            <View style={styles.logoutIcon} />
-            <Text style={styles.logoutText}>Logout</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   // Center Main Content Component (Light Theme as per screenshot)
   const MainContent = () => (
-    <ScrollView style={styles.mainContent} contentContainerStyle={styles.mainContentScroll} showsVerticalScrollIndicator={false}>
-      <View style={styles.mainHeader}>
+    <View style={{flex: 1}}>
+      {!isDesktop && (
+        <View style={styles.mobileHeader}>
+          <TouchableOpacity onPress={() => setIsSidebarOpen(true)} style={styles.hamburgerBtn}>
+            <MaterialCommunityIcons name="menu" size={28} color="#0F172A" />
+          </TouchableOpacity>
+          <Text style={styles.mobileHeaderTitle}>SecureExam</Text>
+          <View style={{width: 28}} />
+        </View>
+      )}
+      <ScrollView style={styles.mainContent} contentContainerStyle={styles.mainContentScroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.mainHeader}>
         <Text style={styles.mainTitle}>Data Structures Midterm</Text>
         <Text style={styles.mainSubtitle}>Exam Code: CS101-MID-2024 | Subject: Computer Science</Text>
       </View>
@@ -222,6 +132,7 @@ export default function FacultyDashboardScreen() {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 
   // Right Sidebar (Activity - Light Theme)
@@ -266,9 +177,21 @@ export default function FacultyDashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDesktop ? "light-content" : "dark-content"} />
+      
+      {!isDesktop && (
+        <Modal visible={isSidebarOpen} animationType="slide" transparent={true} onRequestClose={() => setIsSidebarOpen(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity style={styles.modalCloseArea} onPress={() => setIsSidebarOpen(false)} />
+            <View style={styles.mobileSidebarContainer}>
+              <FacultySidebar />
+            </View>
+          </View>
+        </Modal>
+      )}
+
       <View style={[styles.layout, isDesktop ? {flexDirection: 'row'} : {flexDirection: 'column'}]}>
-        {isDesktop && <Sidebar />}
+        {isDesktop && <FacultySidebar />}
         <MainContent />
         {isDesktop && <ActivityPanel />}
       </View>
@@ -283,6 +206,35 @@ const styles = StyleSheet.create({
   },
   layout: {
     flex: 1,
+  },
+  mobileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  hamburgerBtn: {
+    padding: 4,
+  },
+  mobileHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'row',
+  },
+  modalCloseArea: {
+    flex: 1,
+  },
+  mobileSidebarContainer: {
+    width: 260,
+    backgroundColor: '#0F172A',
   },
   // Sidebar Styles (Dark)
   sidebar: {

@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, make_response
 from routes.utils import send_email, send_email_debug, get_network_ip
 from flask_mail import Message
 import random
 import string
+import csv
+import io
 from datetime import datetime, timedelta
 from database import get_db, generate_id, hash_password, check_password
 import json
@@ -111,6 +113,10 @@ def dashboard():
     exams = get_faculty_exams_with_counts(session['faculty_id'])
     return render_template('faculty/dashboard.html', exams=exams)
 
+@faculty_bp.route('/exam/create', methods=['GET'])
+@faculty_required
+def create_exam_view():
+    return render_template('faculty/create_exam_full.html')
 
 @faculty_bp.route('/exam/create', methods=['POST'])
 @faculty_required
@@ -118,26 +124,30 @@ def create_exam():
     exam_name = request.form.get('exam_name', '').strip()
     subject = request.form.get('subject', '').strip()
     duration = request.form.get('duration', '0').strip()
+    passing_percentage = request.form.get('passing_percentage', '40').strip()
+    instructions = request.form.get('instructions', '').strip()
 
     if not all([exam_name, subject, duration]):
         flash('All fields are required.', 'error')
-        return redirect(url_for('faculty.dashboard'))
+        return redirect(url_for('faculty.create_exam_view'))
 
     try:
         duration = int(duration)
         if duration < 5 or duration > 180:
             flash('Duration must be between 5 and 180 minutes.', 'error')
-            return redirect(url_for('faculty.dashboard'))
+            return redirect(url_for('faculty.create_exam_view'))
+            
+        passing_percentage = int(passing_percentage)
     except ValueError:
-        flash('Invalid duration.', 'error')
-        return redirect(url_for('faculty.dashboard'))
+        flash('Invalid numeric values provided.', 'error')
+        return redirect(url_for('faculty.create_exam_view'))
 
     exam_code = generate_id('EXAM', 4)
     db = get_db()
     try:
         db.execute(
-            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration) VALUES (?, ?, ?, ?, ?)',
-            (exam_code, exam_name, session['faculty_id'], subject, duration)
+            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration, passing_percentage, instructions) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (exam_code, exam_name, session['faculty_id'], subject, duration, passing_percentage, instructions)
         )
         db.commit()
         flash(f'Exam created! Code: {exam_code}', 'success')
@@ -146,7 +156,7 @@ def create_exam():
     finally:
         db.close()
 
-    return redirect(url_for('faculty.dashboard'))
+    return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
 
 
 @faculty_bp.route('/exam/<exam_code>')
@@ -184,34 +194,94 @@ def exam_detail(exam_code):
                           recent_activity=recent_activity)
 
 
-@faculty_bp.route('/exam/<exam_code>/edit', methods=['POST'])
+@faculty_bp.route('/exam/<exam_code>/edit', methods=['GET', 'POST'])
 @faculty_required
 def edit_exam(exam_code):
-    exam_name = request.form.get('exam_name', '').strip()
-    subject = request.form.get('subject', '').strip()
-    duration = request.form.get('duration', '0').strip()
-
-    if not all([exam_name, subject, duration]):
-        flash('All fields are required.', 'error')
-        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
-
-    try:
-        duration = int(duration)
-        if duration < 5 or duration > 180:
-            flash('Duration must be between 5 and 180 minutes.', 'error')
-            return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
-    except ValueError:
-        flash('Invalid duration.', 'error')
-        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
-
     db = get_db()
-    db.execute('UPDATE exams SET exam_name=?, subject=?, duration=? WHERE exam_code=? AND faculty_id=?',
-               (exam_name, subject, duration, exam_code, session['faculty_id']))
-    db.commit()
-    db.close()
-    flash('Exam updated.', 'success')
-    return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
 
+    if request.method == 'POST':
+        exam_name = request.form.get('exam_name', '').strip()
+        subject = request.form.get('subject', '').strip()
+        duration = request.form.get('duration', '0').strip()
+
+        if not all([exam_name, subject, duration]):
+            flash('All fields are required.', 'error')
+            db.close()
+            return redirect(url_for('faculty.edit_exam', exam_code=exam_code))
+
+        try:
+            duration = int(duration)
+            if duration < 5 or duration > 180:
+                flash('Duration must be between 5 and 180 minutes.', 'error')
+                db.close()
+                return redirect(url_for('faculty.edit_exam', exam_code=exam_code))
+        except ValueError:
+            flash('Invalid duration.', 'error')
+            db.close()
+            return redirect(url_for('faculty.edit_exam', exam_code=exam_code))
+
+        db.execute('UPDATE exams SET exam_name=?, subject=?, duration=? WHERE exam_code=? AND faculty_id=?',
+                   (exam_name, subject, duration, exam_code, session['faculty_id']))
+        db.commit()
+        db.close()
+        flash('Exam updated.', 'success')
+        return redirect(url_for('faculty.edit_exam', exam_code=exam_code))
+
+    db.close()
+    return render_template('faculty/edit_exam_full.html', exam=exam)
+
+
+@faculty_bp.route('/exam/<exam_code>/settings', methods=['GET', 'POST'])
+@faculty_required
+def exam_settings(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    if request.method == 'POST':
+        instructions = request.form.get('instructions', '').strip()
+        passing_percentage = request.form.get('passing_percentage', '40').strip()
+        randomize_questions = 1 if request.form.get('randomize_questions') else 0
+        shuffle_options = 1 if request.form.get('shuffle_options') else 0
+
+        try:
+            passing_percentage = int(passing_percentage)
+        except ValueError:
+            passing_percentage = 40
+
+        db.execute('''UPDATE exams SET instructions=?, passing_percentage=?, randomize_questions=?, shuffle_options=? 
+                      WHERE exam_code=? AND faculty_id=?''',
+                   (instructions, passing_percentage, randomize_questions, shuffle_options, exam_code, session['faculty_id']))
+        db.commit()
+        db.close()
+        flash('Exam settings saved.', 'success')
+        return redirect(url_for('faculty.exam_settings', exam_code=exam_code))
+        
+    db.close()
+    return render_template('faculty/exam_settings_full.html', exam=exam)
+
+
+@faculty_bp.route('/exam/<exam_code>/questions', methods=['GET'])
+@faculty_required
+def manage_questions(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    questions = db.execute('SELECT * FROM questions WHERE exam_code = ? ORDER BY id', (exam_code,)).fetchall()
+    db.close()
+    return render_template('faculty/manage_questions_full.html', exam=exam, questions=questions)
 
 @faculty_bp.route('/exam/<exam_code>/toggle', methods=['POST'])
 @faculty_required
@@ -250,24 +320,52 @@ def add_question(exam_code):
     option_c = request.form.get('option_c', '').strip()
     option_d = request.form.get('option_d', '').strip()
     correct_answer = request.form.get('correct_answer', '').strip().upper()
+    difficulty = request.form.get('difficulty', 'Medium').strip()
 
     if not all([question_text, option_a, option_b, option_c, option_d, correct_answer]):
         flash('All fields are required.', 'error')
-        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+        return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
 
     if correct_answer not in ['A', 'B', 'C', 'D']:
         flash('Correct answer must be A, B, C, or D.', 'error')
-        return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+        return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
 
     db = get_db()
     db.execute(
-        'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer)
+        'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty)
     )
     db.commit()
     db.close()
     flash('Question added.', 'success')
-    return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+    return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
+
+
+@faculty_bp.route('/exam/<exam_code>/question/<int:q_id>/edit', methods=['POST'])
+@faculty_required
+def edit_question(exam_code, q_id):
+    question_text = request.form.get('question_text', '').strip()
+    option_a = request.form.get('option_a', '').strip()
+    option_b = request.form.get('option_b', '').strip()
+    option_c = request.form.get('option_c', '').strip()
+    option_d = request.form.get('option_d', '').strip()
+    correct_answer = request.form.get('correct_answer', '').strip().upper()
+    difficulty = request.form.get('difficulty', 'Medium').strip()
+
+    if not all([question_text, option_a, option_b, option_c, option_d, correct_answer]):
+        flash('All fields are required.', 'error')
+        return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
+
+    db = get_db()
+    db.execute(
+        '''UPDATE questions SET question_text=?, option_a=?, option_b=?, option_c=?, option_d=?, correct_answer=?, difficulty=?
+           WHERE id=? AND exam_code=?''',
+        (question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, q_id, exam_code)
+    )
+    db.commit()
+    db.close()
+    flash('Question updated.', 'success')
+    return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
 
 
 @faculty_bp.route('/exam/<exam_code>/question/<int:q_id>/delete', methods=['POST'])
@@ -278,7 +376,118 @@ def delete_question(exam_code, q_id):
     db.commit()
     db.close()
     flash('Question deleted.', 'success')
-    return redirect(url_for('faculty.exam_detail', exam_code=exam_code))
+    return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
+
+
+@faculty_bp.route('/exam/<exam_code>/bulk_upload', methods=['GET', 'POST'])
+@faculty_required
+def bulk_upload(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file uploaded.', 'error')
+            db.close()
+            return redirect(request.url)
+
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected.', 'error')
+            db.close()
+            return redirect(request.url)
+
+        if not file.filename.endswith('.csv'):
+            flash('Only CSV files are allowed.', 'error')
+            db.close()
+            return redirect(request.url)
+
+        try:
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_input = csv.reader(stream)
+            
+            try:
+                header = next(csv_input)
+            except StopIteration:
+                flash('The CSV file is empty.', 'error')
+                db.close()
+                return redirect(request.url)
+
+            valid_rows = 0
+            skipped_rows = 0
+            
+            for row in csv_input:
+                if len(row) < 6:
+                    skipped_rows += 1
+                    continue
+                    
+                q_text = row[0].strip()
+                opt_a = row[1].strip()
+                opt_b = row[2].strip()
+                opt_c = row[3].strip()
+                opt_d = row[4].strip()
+                correct = row[5].strip().upper()
+                diff = row[6].strip() if len(row) > 6 else 'Medium'
+                
+                if not diff:
+                    diff = 'Medium'
+                    
+                if not all([q_text, opt_a, opt_b, opt_c, opt_d, correct]) or correct not in ['A', 'B', 'C', 'D']:
+                    skipped_rows += 1
+                    continue
+                    
+                db.execute(
+                    'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    (exam_code, q_text, opt_a, opt_b, opt_c, opt_d, correct, diff)
+                )
+                valid_rows += 1
+                
+            db.commit()
+            
+            if valid_rows > 0:
+                flash(f'Successfully uploaded {valid_rows} questions. Skipped {skipped_rows} invalid rows.', 'success')
+            else:
+                flash(f'No valid questions found in CSV. Skipped {skipped_rows} rows.', 'error')
+                
+            db.close()
+            return redirect(url_for('faculty.manage_questions', exam_code=exam_code))
+            
+        except Exception as e:
+            flash(f'Error processing file: {str(e)}', 'error')
+            db.close()
+            return redirect(request.url)
+
+    db.close()
+    return render_template('faculty/bulk_upload_full.html', exam=exam)
+
+
+@faculty_bp.route('/exam/<exam_code>/download_template')
+@faculty_required
+def download_template(exam_code):
+    # Verify exam ownership
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    db.close()
+    
+    if not exam:
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+
+    # Generate CSV template
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Question', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct Answer', 'Difficulty'])
+    writer.writerow(['What is the capital of France?', 'London', 'Berlin', 'Paris', 'Madrid', 'C', 'Easy'])
+    
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=questions_template.csv"
+    response.headers["Content-type"] = "text/csv"
+    return response
 
 
 @faculty_bp.route('/exam/<exam_code>/results')
@@ -298,6 +507,94 @@ def exam_results(exam_code):
     ).fetchall()
     db.close()
     return render_template('faculty/results.html', exam=exam, results=results)
+
+
+@faculty_bp.route('/exam/<exam_code>/categories')
+@faculty_required
+def categories(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+        
+    rows = db.execute('''
+        SELECT c.id, c.name, c.color, COUNT(q.id) as question_count
+        FROM categories c
+        LEFT JOIN questions q ON c.id = q.category_id
+        WHERE c.exam_code = ?
+        GROUP BY c.id
+        ORDER BY c.id DESC
+    ''', (exam_code,)).fetchall()
+    categories_list = [dict(row) for row in rows]
+    db.close()
+    
+    return render_template('faculty/categories_full.html', exam=exam, categories=categories_list)
+
+@faculty_bp.route('/exam/<exam_code>/category/add', methods=['POST'])
+@faculty_required
+def add_category(exam_code):
+    name = request.form.get('name')
+    color = request.form.get('color', '#3B82F6')
+    
+    if name:
+        db = get_db()
+        # Verify exam ownership
+        exam = db.execute('SELECT id FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+        if exam:
+            db.execute('INSERT INTO categories (exam_code, name, color) VALUES (?, ?, ?)', (exam_code, name, color))
+            db.commit()
+            flash('Category added.', 'success')
+        db.close()
+    
+    return redirect(url_for('faculty.categories', exam_code=exam_code))
+
+@faculty_bp.route('/exam/<exam_code>/category/<int:category_id>/delete', methods=['POST'])
+@faculty_required
+def delete_category(exam_code, category_id):
+    db = get_db()
+    exam = db.execute('SELECT id FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    if exam:
+        db.execute('DELETE FROM categories WHERE id = ?', (category_id,))
+        db.commit()
+        flash('Category deleted.', 'success')
+    db.close()
+    return redirect(url_for('faculty.categories', exam_code=exam_code))
+
+
+@faculty_bp.route('/exam/<exam_code>/attendance')
+@faculty_required
+def student_attendance(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    if not exam:
+        db.close()
+        flash('Exam not found.', 'error')
+        return redirect(url_for('faculty.dashboard'))
+        
+    attempts = db.execute('SELECT * FROM student_attempts WHERE exam_code = ? ORDER BY attempt_date DESC', (exam_code,)).fetchall()
+    db.close()
+    return render_template('faculty/attendance_full.html', exam=exam, attempts=attempts)
+
+
+@faculty_bp.route('/analytics/trends')
+@faculty_required
+def performance_trends():
+    db = get_db()
+    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY id DESC', (session['faculty_id'],)).fetchall()
+    db.close()
+    return render_template('faculty/performance_trends.html', exams=exams)
+
+
+@faculty_bp.route('/reports/export')
+@faculty_required
+def export_reports():
+    db = get_db()
+    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY id DESC', (session['faculty_id'],)).fetchall()
+    db.close()
+    return render_template('faculty/export_reports.html', exams=exams)
 
 
 @faculty_bp.route('/change-password', methods=['GET', 'POST'])

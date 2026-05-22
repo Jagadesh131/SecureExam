@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+    <style>
+        .settings-card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #E2E8F0; }
+        .settings-card h3 { margin-top: 0; color: #0F172A; font-size: 18px; margin-bottom: 16px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .input-control { width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; box-sizing: border-box; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info { flex: 1; }
+        .toggle-title { font-weight: 600; color: #0F172A; font-size: 14px; }
+        .toggle-desc { font-size: 12px; color: #64748B; margin-top: 2px; }
+        .save-btn { background: #1D61FF; color: white; border: none; border-radius: 8px; padding: 14px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer; transition: all 0.2s; }
+        .save-btn:hover { background: #1550DF; }
+        .share-box { background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; margin-bottom: 24px; }
+        .share-icon { width: 40px; height: 40px; background: #10B981; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; margin-right: 16px; flex-shrink: 0; }
+        .share-content { flex: 1; }
+        .share-title { font-weight: 700; color: #065F46; font-size: 16px; margin-bottom: 4px; }
+        .share-desc { color: #059669; font-size: 13px; margin-bottom: 12px; }
+        .share-link-box { background: white; padding: 10px 12px; border-radius: 6px; border: 1px solid #D1FAE5; color: #4B5563; font-size: 13px; font-family: monospace; margin-bottom: 12px; }
+        .copy-btn { background: #10B981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <aside class="left-sidebar">
+        <div class="brand"><div style="font-size: 24px;">🎓</div><span class="brand-name">SecureExam</span></div>
+        <div class="active-exam-box" style="padding: 0 16px; margin-bottom: 24px;">
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">ACTIVE EXAM</div>
+                <div style="color: white; font-size: 14px; font-weight: 700;">{{ exam.exam_name }}</div>
+                <div style="font-size: 11px; color: #3B82F6;">{{ exam.exam_code }}</div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Exam Management</div>
+            <a href="{{ url_for('faculty.exam_settings', exam_code=exam.exam_code) }}" class="nav-item" style="background: rgba(59,130,246,0.1); color: white; border-left: 3px solid #3B82F6;">
+                <i class="fas fa-cog" style="color: #3B82F6;"></i> <span class="nav-text">Exam Settings</span>
+            </a>
+            <a href="{{ url_for('faculty.edit_exam', exam_code=exam.exam_code) }}" class="nav-item">
+                <i class="fas fa-edit"></i> <span class="nav-text">Edit Exam</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Question Management</div>
+            <a href="{{ url_for('faculty.manage_questions', exam_code=exam.exam_code) }}" class="nav-item">
+                <i class="fas fa-tasks"></i> <span class="nav-text">Manage Questions</span>
+            </a>
+            <a href="{{ url_for('faculty.bulk_upload', exam_code=exam.exam_code) }}" class="nav-item"><i class="fas fa-file-upload"></i> <span class="nav-text">Bulk Upload CSV</span></a>
+            <a href="{{ url_for('faculty.categories', exam_code=exam.exam_code) }}" class="nav-item"><i class="fas fa-tags"></i> <span class="nav-text">Categories</span></a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Results & Analytics</div>
+            <a href="{{ url_for('faculty.exam_results', exam_code=exam.exam_code) }}" class="nav-item"><i class="fas fa-poll"></i> <span class="nav-text">Exam Results</span></a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">General Tools</div>
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item"><i class="fas fa-list"></i> <span class="nav-text">All Exams</span></a>
+            <a href="#" class="nav-item"><i class="fas fa-plus-circle"></i> <span class="nav-text">Create New Exam</span></a>
+        </div>
+    </aside>
+
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="content-container" style="max-width: 800px; margin: 0 auto; padding-top: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 24px; margin-left: -20px;">
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div style="padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; font-size: 14px;
+                  {% if category == 'success' %}background-color: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;
+                  {% elif category == 'error' %}background-color: #FEF2F2; color: #991B1B; border: 1px solid #FECACA;
+                  {% else %}background-color: #F0F9FF; color: #075985; border: 1px solid #BAE6FD;{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="share-box">
+            <div class="share-icon"><i class="fas fa-link"></i></div>
+            <div class="share-content">
+                <div class="share-title">Share Exam Link</div>
+                <div class="share-desc">Share this link with students to let them access the exam.</div>
+                <div class="share-link-box" id="examLink">http://127.0.0.1:5050/student/exam/{{ exam.exam_code }}</div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('examLink').innerText); alert('Copied!');"><i class="fas fa-copy"></i> Copy Link</button>
+                    <span style="font-size: 13px; color: #059669; font-weight: 600;">Code: {{ exam.exam_code }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('faculty.exam_settings', exam_code=exam.exam_code) }}">
+            
+            <div class="settings-card">
+                <h3>Basic Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="input-group">
+                        <label>Exam Name</label>
+                        <input type="text" class="input-control" value="{{ exam.exam_name }}" readonly style="background: #F8FAFC; color: #64748B;">
+                    </div>
+                    <div class="input-group">
+                        <label>Subject</label>
+                        <input type="text" class="input-control" value="{{ exam.subject }}" readonly style="background: #F8FAFC; color: #64748B;">
+                    </div>
+                    <div class="input-group">
+                        <label>Duration (min)</label>
+                        <input type="text" class="input-control" value="{{ exam.duration }}" readonly style="background: #F8FAFC; color: #64748B;">
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 8px;">* To change basic information, please use the Edit Exam page.</div>
+            </div>
+
+            <div class="settings-card">
+                <h3>Instructions Editor</h3>
+                <textarea name="instructions" rows="4" class="input-control" placeholder="Enter instructions for students...">{{ exam.instructions or '' }}</textarea>
+            </div>
+
+            <div class="settings-card">
+                <h3>Advanced Settings</h3>
+                
+                <div class="input-group" style="margin-bottom: 24px;">
+                    <label>Passing Percentage (%)</label>
+                    <input type="number" name="passing_percentage" class="input-control" value="{{ exam.passing_percentage or 40 }}" min="1" max="100" required>
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Randomize Questions</div>
+                        <div class="toggle-desc">Show questions in random order for each student</div>
+                    </div>
+                    <input type="checkbox" name="randomize_questions" value="1" {% if exam.randomize_questions %}checked{% endif %} style="transform: scale(1.5);">
+                </div>
+
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Shuffle Options</div>
+                        <div class="toggle-desc">Randomize answer options (A,B,C,D)</div>
+                    </div>
+                    <input type="checkbox" name="shuffle_options" value="1" {% if exam.shuffle_options %}checked{% endif %} style="transform: scale(1.5);">
+                </div>
+            </div>
+
+            <button type="submit" class="save-btn">Save Settings</button>
+        </form>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        const main = document.getElementById('mainWrapper');
+        if (document.querySelector('.left-sidebar').classList.contains('collapsed')) {
+            main.classList.add('expanded');
+        } else {
+            main.classList.remove('expanded');
+        }
+    }
+</script>
+
+</body>
+</html>

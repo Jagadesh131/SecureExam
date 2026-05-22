@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance — {{ exam.exam_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+    <style>
+        .attendance-panel {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .panel-header {
+            padding: 20px 24px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0F172A;
+            margin: 0;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748B;
+            border-bottom: 1px solid #E2E8F0;
+            text-transform: uppercase;
+        }
+        .data-table td {
+            padding: 16px 24px;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 14px;
+            color: #334155;
+            vertical-align: middle;
+        }
+        .data-table tr:hover {
+            background-color: #F8FAFC;
+        }
+        .export-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            float: left;
+        }
+        .export-btn:hover {
+            background-color: #2563EB;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    {% set active_exam = exam %}
+    {% include 'faculty/components/sidebar.html' %}
+
+    <main class="main-wrapper" id="mainWrapper">
+        <div class="content-container" style="max-width: 1000px; margin: 0 auto; padding-top: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 24px; margin-left: -20px;">
+                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            </div>
+            
+            <div class="attendance-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Student Attendance - {{ exam.exam_name }}</h2>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Reg Number</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Time Taken</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if attempts %}
+                            {% for a in attempts %}
+                            <tr>
+                                <td style="font-weight: 600;">{{ a.reg_number }}</td>
+                                <td>{{ a.student_name }}</td>
+                                <td><span class="pill-badge pill-success">Completed</span></td>
+                                <td style="color: #64748B;">{{ a.attempt_date.split('T')[0] }} 10:00 AM</td> <!-- Mocked for now -->
+                                <td style="color: #64748B;">{{ a.attempt_date.split('T')[0] }} {{ "10:%02d AM"|format(a.time_taken|int) if a.time_taken else 'N/A' }}</td>
+                                <td style="font-weight: 500;">{{ a.time_taken if a.time_taken else 0 }} min</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px; color: #64748B;">No attendance records found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="padding-bottom: 40px; overflow: hidden;">
+                <button class="export-btn" onclick="alert('Exporting functionality will be available soon.')">
+                    <i class="fas fa-download"></i> Export Attendance List
+                </button>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.left-sidebar').classList.toggle('collapsed');
+        const main = document.getElementById('mainWrapper');
+        if (document.querySelector('.left-sidebar').classList.contains('collapsed')) {
+            main.classList.add('expanded');
+        } else {
+            main.classList.remove('expanded');
+        }
+    }
+</script>
+
+</body>
+</html>

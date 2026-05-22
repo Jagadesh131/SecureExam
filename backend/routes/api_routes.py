@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 import json
+import csv
+import io
 from database import get_db, check_password, get_faculty_exams_with_counts, hash_password, generate_id
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -115,8 +117,8 @@ def api_create_exam():
     db = get_db()
     try:
         db.execute(
-            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration) VALUES (?, ?, ?, ?, ?)',
-            (exam_code, exam_name, faculty_id, subject, duration)
+            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration, instructions, passing_percentage, randomize_questions, shuffle_options) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            (exam_code, exam_name, faculty_id, subject, duration, '', 40, 0, 0)
         )
         db.commit()
         return jsonify({'success': True, 'exam_code': exam_code, 'message': 'Exam created successfully'})
@@ -140,6 +142,37 @@ def api_toggle_exam(exam_code):
     db.close()
     return jsonify({'success': True, 'new_status': new_status})
 
+@api_bp.route('/faculty/exam/<exam_code>/settings', methods=['POST'])
+def api_update_exam_settings(exam_code):
+    """Update exam settings via API"""
+    data = request.get_json()
+    exam_name = data.get('exam_name')
+    subject = data.get('subject')
+    duration = data.get('duration')
+    instructions = data.get('instructions', '')
+    passing_percentage = data.get('passing_percentage', 40)
+    randomize_questions = 1 if data.get('randomize_questions') else 0
+    shuffle_options = 1 if data.get('shuffle_options') else 0
+
+    if not all([exam_name, subject, duration]):
+        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+
+    db = get_db()
+    try:
+        db.execute(
+            '''UPDATE exams 
+               SET exam_name=?, subject=?, duration=?, instructions=?, 
+                   passing_percentage=?, randomize_questions=?, shuffle_options=? 
+               WHERE exam_code=?''',
+            (exam_name, subject, duration, instructions, passing_percentage, randomize_questions, shuffle_options, exam_code)
+        )
+        db.commit()
+        return jsonify({'success': True, 'message': 'Settings saved successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        db.close()
+
 @api_bp.route('/faculty/exam/<exam_code>/questions', methods=['GET'])
 def api_get_questions(exam_code):
     """Get all questions for an exam (including correct answer for faculty)"""
@@ -158,6 +191,7 @@ def api_add_question(exam_code):
     opt_c = data.get('option_c')
     opt_d = data.get('option_d')
     correct = data.get('correct_answer')
+    difficulty = data.get('difficulty', 'Medium')
 
     if not all([q_text, opt_a, opt_b, opt_c, opt_d, correct]):
         return jsonify({'success': False, 'message': 'Missing fields'}), 400
@@ -165,11 +199,48 @@ def api_add_question(exam_code):
     db = get_db()
     try:
         db.execute(
-            'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (exam_code, q_text, opt_a, opt_b, opt_c, opt_d, correct)
+            'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (exam_code, q_text, opt_a, opt_b, opt_c, opt_d, correct, difficulty)
         )
         db.commit()
         return jsonify({'success': True, 'message': 'Question added'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        db.close()
+
+@api_bp.route('/faculty/exam/<exam_code>/question/<q_id>', methods=['PUT', 'DELETE'])
+def api_manage_question(exam_code, q_id):
+    """Update or delete a specific question"""
+    db = get_db()
+    try:
+        if request.method == 'DELETE':
+            db.execute('DELETE FROM questions WHERE id = ? AND exam_code = ?', (q_id, exam_code))
+            db.commit()
+            return jsonify({'success': True, 'message': 'Question deleted'})
+            
+        elif request.method == 'PUT':
+            data = request.get_json()
+            q_text = data.get('question_text')
+            opt_a = data.get('option_a')
+            opt_b = data.get('option_b')
+            opt_c = data.get('option_c')
+            opt_d = data.get('option_d')
+            correct = data.get('correct_answer')
+            difficulty = data.get('difficulty', 'Medium')
+
+            if not all([q_text, opt_a, opt_b, opt_c, opt_d, correct]):
+                return jsonify({'success': False, 'message': 'Missing fields'}), 400
+
+            db.execute(
+                '''UPDATE questions 
+                   SET question_text=?, option_a=?, option_b=?, option_c=?, option_d=?, correct_answer=?, difficulty=?
+                   WHERE id=? AND exam_code=?''',
+                (q_text, opt_a, opt_b, opt_c, opt_d, correct, difficulty, q_id, exam_code)
+            )
+            db.commit()
+            return jsonify({'success': True, 'message': 'Question updated'})
+            
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
     finally:
@@ -321,3 +392,127 @@ def get_admin_analytics():
         'stats': stats,
         'deep_stats': deep_stats
     })
+
+@api_bp.route('/faculty/exam/<exam_code>/bulk_upload', methods=['POST'])
+def api_bulk_upload_questions(exam_code):
+    """API endpoint to handle CSV uploads from Expo app"""
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'No file uploaded'})
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'})
+
+    if not file.filename.endswith('.csv'):
+        return jsonify({'success': False, 'message': 'Only CSV files are allowed'})
+
+    try:
+        # Read and parse CSV
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_input = csv.reader(stream)
+        
+        # Read header row
+        try:
+            header = next(csv_input)
+        except StopIteration:
+            return jsonify({'success': False, 'message': 'The CSV file is empty'})
+
+        # Map expected headers
+        # Expected: Question,Option A,Option B,Option C,Option D,Correct Answer,Difficulty
+        
+        valid_rows = 0
+        skipped_rows = 0
+        db = get_db()
+        
+        for row in csv_input:
+            if len(row) < 6:
+                skipped_rows += 1
+                continue
+                
+            q_text = row[0].strip()
+            opt_a = row[1].strip()
+            opt_b = row[2].strip()
+            opt_c = row[3].strip()
+            opt_d = row[4].strip()
+            correct = row[5].strip().upper()
+            diff = row[6].strip() if len(row) > 6 else 'Medium'
+            
+            if not diff:
+                diff = 'Medium'
+                
+            if not all([q_text, opt_a, opt_b, opt_c, opt_d, correct]):
+                skipped_rows += 1
+                continue
+                
+            if correct not in ['A', 'B', 'C', 'D']:
+                skipped_rows += 1
+                continue
+                
+            db.execute(
+                'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                (exam_code, q_text, opt_a, opt_b, opt_c, opt_d, correct, diff)
+            )
+            valid_rows += 1
+            
+        db.commit()
+        db.close()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully uploaded {valid_rows} questions. Skipped {skipped_rows} invalid rows.'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error processing file: {str(e)}'})
+
+@api_bp.route('/faculty/exam/<exam_code>/categories', methods=['GET'])
+def api_get_categories(exam_code):
+    """Fetch categories for an exam with question counts"""
+    try:
+        db = get_db()
+        # Left join to get count of questions per category
+        rows = db.execute('''
+            SELECT c.id, c.name, c.color, COUNT(q.id) as question_count
+            FROM categories c
+            LEFT JOIN questions q ON c.id = q.category_id
+            WHERE c.exam_code = ?
+            GROUP BY c.id
+            ORDER BY c.id DESC
+        ''', (exam_code,)).fetchall()
+        
+        categories = [dict(row) for row in rows]
+        db.close()
+        return jsonify({'success': True, 'categories': categories})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@api_bp.route('/faculty/exam/<exam_code>/category/add', methods=['POST'])
+def api_add_category(exam_code):
+    """Add a new category"""
+    data = request.get_json()
+    name = data.get('name')
+    color = data.get('color', '#3B82F6')
+    
+    if not name:
+        return jsonify({'success': False, 'message': 'Category name is required'})
+        
+    try:
+        db = get_db()
+        db.execute('INSERT INTO categories (exam_code, name, color) VALUES (?, ?, ?)', (exam_code, name, color))
+        db.commit()
+        db.close()
+        return jsonify({'success': True, 'message': 'Category added successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@api_bp.route('/faculty/category/<int:category_id>/delete', methods=['DELETE', 'POST'])
+def api_delete_category(category_id):
+    """Delete a category"""
+    try:
+        db = get_db()
+        db.execute('DELETE FROM categories WHERE id = ?', (category_id,))
+        db.commit()
+        db.close()
+        return jsonify({'success': True, 'message': 'Category deleted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
