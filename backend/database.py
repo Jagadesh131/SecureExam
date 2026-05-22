@@ -77,14 +77,25 @@ def hash_password(password):
 
 def get_db():
     """Create a new database connection."""
+    
+    # Configure SSL args based on OS
+    ssl_args = {
+        'ssl_verify_cert': True,
+        'ssl_verify_identity': True
+    }
+    
+    # On Linux (Render), we need to explicitly provide the CA bundle path
+    import os
+    if os.path.exists('/etc/ssl/certs/ca-certificates.crt'):
+        ssl_args['ssl_ca'] = '/etc/ssl/certs/ca-certificates.crt'
+
     conn = mysql.connector.connect(
         host=MYSQL_HOST,
         port=MYSQL_PORT,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
         database=MYSQL_DB,
-        ssl_verify_cert=True,
-        ssl_verify_identity=True
+        **ssl_args
     )
     return MySQLConnWrapper(conn)
 
