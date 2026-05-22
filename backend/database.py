@@ -3,10 +3,11 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-# MySQL Configuration
-MYSQL_HOST = '127.0.0.1'
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = ''
+# TiDB Configuration
+MYSQL_HOST = 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com'
+MYSQL_PORT = 4000
+MYSQL_USER = 'EzPuqJTV9UFbBBF.root'
+MYSQL_PASSWORD = 'v5Z6pNX8tcFdQJx3'
 MYSQL_DB = 'secure_exam_db'
 
 class CustomRow:
@@ -78,9 +79,12 @@ def get_db():
     """Create a new database connection."""
     conn = mysql.connector.connect(
         host=MYSQL_HOST,
+        port=MYSQL_PORT,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
-        database=MYSQL_DB
+        database=MYSQL_DB,
+        ssl_verify_cert=True,
+        ssl_verify_identity=True
     )
     return MySQLConnWrapper(conn)
 
