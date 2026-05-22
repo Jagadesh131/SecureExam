@@ -1,4 +1,5 @@
-import mysql.connector
+import pymysql
+import ssl
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -36,15 +37,21 @@ class MySQLCursorWrapper:
     def __init__(self, cursor):
         self.cursor = cursor
         
+    def _get_keys(self):
+        if not self.cursor.description:
+            return []
+        return [desc[0] for desc in self.cursor.description]
+        
     def fetchone(self):
         row = self.cursor.fetchone()
         if not row:
             return None
-        return CustomRow(self.cursor.column_names, row)
+        return CustomRow(self._get_keys(), row)
         
     def fetchall(self):
         rows = self.cursor.fetchall()
-        return [CustomRow(self.cursor.column_names, row) for row in rows]
+        keys = self._get_keys()
+        return [CustomRow(keys, row) for row in rows]
         
     @property
     def lastrowid(self):
@@ -76,156 +83,149 @@ def hash_password(password):
     return generate_password_hash(password)
 
 def get_db():
-    """Create a new database connection."""
+    """Create a new database connection using pure python pymysql."""
+    ssl_context = ssl.create_default_context()
     
-    # Configure SSL args based on OS
-    ssl_args = {
-        'ssl_verify_cert': True,
-        'ssl_verify_identity': True
-    }
-    
-    # On Linux (Render), we need to explicitly provide the CA bundle path
-    import os
-    if os.path.exists('/etc/ssl/certs/ca-certificates.crt'):
-        ssl_args['ssl_ca'] = '/etc/ssl/certs/ca-certificates.crt'
-
-    conn = mysql.connector.connect(
+    conn = pymysql.connect(
         host=MYSQL_HOST,
         port=MYSQL_PORT,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
         database=MYSQL_DB,
-        **ssl_args
+        ssl=ssl_context
     )
     return MySQLConnWrapper(conn)
 
 def init_db():
     """Initialize the MySQL database with the required schema."""
-    conn = get_db()
-
-    # 1. Admin Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS admin (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL
-    )''')
-
-    # 2. Faculty Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS faculty (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        faculty_id VARCHAR(255) UNIQUE NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        department VARCHAR(255),
-        phone VARCHAR(255),
-        birthday VARCHAR(255),
-        created_date VARCHAR(255),
-        temp_flag INT DEFAULT 0,
-        reset_token VARCHAR(255),
-        token_expiry VARCHAR(255)
-    )''')
-
-    # 3. Exams Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS exams (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        exam_code VARCHAR(255) UNIQUE NOT NULL,
-        exam_name VARCHAR(255) NOT NULL,
-        faculty_id VARCHAR(255) NOT NULL,
-        subject VARCHAR(255),
-        duration INT,
-        is_active INT DEFAULT 0,
-        instructions TEXT,
-        passing_percentage INT DEFAULT 40,
-        created_date VARCHAR(255),
-        FOREIGN KEY (faculty_id) REFERENCES faculty (faculty_id) ON DELETE CASCADE
-    )''')
-
-    # 3.5. Categories Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS categories (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        exam_code VARCHAR(255) NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        color VARCHAR(20) DEFAULT '#3B82F6',
-        FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
-    )''')
-
-    # 4. Questions Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS questions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        exam_code VARCHAR(255) NOT NULL,
-        question_text TEXT NOT NULL,
-        option_a TEXT NOT NULL,
-        option_b TEXT NOT NULL,
-        option_c TEXT NOT NULL,
-        option_d TEXT NOT NULL,
-        correct_answer TEXT NOT NULL,
-        difficulty VARCHAR(255) DEFAULT 'Medium',
-        category_id INT NULL,
-        FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE,
-        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
-    )''')
-
-    # Ensure category_id exists if the table was created previously
     try:
-        conn.execute("ALTER TABLE questions ADD COLUMN category_id INT NULL")
-    except Exception:
-        pass
-        
-    try:
-        conn.execute("ALTER TABLE questions ADD FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL")
-    except Exception:
-        pass
-
-    # 5. Student Attempts Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS student_attempts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        student_name VARCHAR(255) NOT NULL,
-        reg_number VARCHAR(255) NOT NULL,
-        exam_code VARCHAR(255) NOT NULL,
-        answers TEXT,
-        score INT,
-        total_questions INT,
-        percentage DOUBLE,
-        time_taken INT,
-        attempt_date VARCHAR(255),
-        FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
-    )''')
-
-    # 6. Activity Logs Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS activity_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_type VARCHAR(255),
-        user_id VARCHAR(255),
-        action TEXT,
-        timestamp VARCHAR(255)
-    )''')
-
-    # 7. Backups Table
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS backups (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        filename VARCHAR(255) NOT NULL,
-        size VARCHAR(255),
-        created_date VARCHAR(255)
-    )''')
-
-    # Insert default admin if not exists
-    row = conn.execute("SELECT * FROM admin WHERE username = 'admin'").fetchone()
-    if not row:
-        hashed_pw = hash_password('admin123')
-        conn.execute("INSERT INTO admin (username, password) VALUES (?, ?)", ('admin', hashed_pw))
+        conn = get_db()
     
-    conn.commit()
-    conn.close()
-    print("[OK] Database initialized successfully with MySQL.")
+        # 1. Admin Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS admin (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL
+        )''')
+    
+        # 2. Faculty Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS faculty (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            faculty_id VARCHAR(255) UNIQUE NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            department VARCHAR(255),
+            phone VARCHAR(255),
+            birthday VARCHAR(255),
+            created_date VARCHAR(255),
+            temp_flag INT DEFAULT 0,
+            reset_token VARCHAR(255),
+            token_expiry VARCHAR(255)
+        )''')
+    
+        # 3. Exams Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS exams (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            exam_code VARCHAR(255) UNIQUE NOT NULL,
+            exam_name VARCHAR(255) NOT NULL,
+            faculty_id VARCHAR(255) NOT NULL,
+            subject VARCHAR(255),
+            duration INT,
+            is_active INT DEFAULT 0,
+            instructions TEXT,
+            passing_percentage INT DEFAULT 40,
+            created_date VARCHAR(255),
+            FOREIGN KEY (faculty_id) REFERENCES faculty (faculty_id) ON DELETE CASCADE
+        )''')
+    
+        # 3.5. Categories Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS categories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            exam_code VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            color VARCHAR(20) DEFAULT '#3B82F6',
+            FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
+        )''')
+    
+        # 4. Questions Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS questions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            exam_code VARCHAR(255) NOT NULL,
+            question_text TEXT NOT NULL,
+            option_a TEXT NOT NULL,
+            option_b TEXT NOT NULL,
+            option_c TEXT NOT NULL,
+            option_d TEXT NOT NULL,
+            correct_answer TEXT NOT NULL,
+            difficulty VARCHAR(255) DEFAULT 'Medium',
+            category_id INT NULL,
+            FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+        )''')
+    
+        # Ensure category_id exists if the table was created previously
+        try:
+            conn.execute("ALTER TABLE questions ADD COLUMN category_id INT NULL")
+        except Exception:
+            pass
+            
+        try:
+            conn.execute("ALTER TABLE questions ADD FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL")
+        except Exception:
+            pass
+    
+        # 5. Student Attempts Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS student_attempts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            student_name VARCHAR(255) NOT NULL,
+            reg_number VARCHAR(255) NOT NULL,
+            exam_code VARCHAR(255) NOT NULL,
+            answers TEXT,
+            score INT,
+            total_questions INT,
+            percentage DOUBLE,
+            time_taken INT,
+            attempt_date VARCHAR(255),
+            FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
+        )''')
+    
+        # 6. Activity Logs Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_type VARCHAR(255),
+            user_id VARCHAR(255),
+            action TEXT,
+            timestamp VARCHAR(255)
+        )''')
+    
+        # 7. Backups Table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS backups (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            filename VARCHAR(255) NOT NULL,
+            size VARCHAR(255),
+            created_date VARCHAR(255)
+        )''')
+    
+        # Insert default admin if not exists
+        row = conn.execute("SELECT * FROM admin WHERE username = 'admin'").fetchone()
+        if not row:
+            hashed_pw = hash_password('admin123')
+            conn.execute("INSERT INTO admin (username, password) VALUES (?, ?)", ('admin', hashed_pw))
+        
+        conn.commit()
+        conn.close()
+        print("[OK] Database initialized successfully with MySQL.")
+    except Exception as e:
+        print(f"[WARNING] Skipping init_db due to constraint error: {e}")
 
 def log_activity(user_type, user_id, action):
     """Log system activity."""
