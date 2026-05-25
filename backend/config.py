@@ -17,9 +17,9 @@ ADMIN_PASSWORD = 'admin123'
 # 4. Copy the 16-character code and paste it below.
 
 MAIL_SERVER = 'smtp.gmail.com'
-MAIL_PORT = 587
-MAIL_USE_SSL = False
-MAIL_USE_TLS = True
+MAIL_PORT = 465
+MAIL_USE_SSL = True
+MAIL_USE_TLS = False
 MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'jagadesh.0116@gmail.com')
 MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '') # Set this in your environment variables
 MAIL_DEFAULT_SENDER = ('MCQ System', MAIL_USERNAME)
