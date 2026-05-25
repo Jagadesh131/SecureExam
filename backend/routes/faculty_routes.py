@@ -641,10 +641,19 @@ def change_password():
 def forgot_password():
     if request.method == 'POST':
         faculty_id = request.form.get('faculty_id', '').strip().upper()
+        email = request.form.get('email', '').strip()
+        
         db = get_db()
-        faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (faculty_id,)).fetchone()
+        
+        if faculty_id:
+            faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (faculty_id,)).fetchone()
+        elif email:
+            faculty = db.execute('SELECT * FROM faculty WHERE email = ?', (email,)).fetchone()
+        else:
+            faculty = None
 
         if faculty:
+            faculty_id = faculty['faculty_id']  # Ensure we have it for the email template
             # Generate a new random strong temporary password
             new_clear_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
             hashed = hash_password(new_clear_pass)
@@ -720,7 +729,7 @@ def forgot_password():
             db.close()
             return redirect(url_for('faculty.login'))
         else:
-            flash('Faculty ID not found.', 'error')
+            flash('No account found with that Email or Faculty ID.', 'error')
             db.close()
 
     return render_template('faculty/forgot_password.html')
