@@ -1,27 +1,42 @@
-{% extends "base.html" %}
-{% block title %}Edit Profile — MCQ System{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile — Faculty</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}">
+</head>
+<body>
 
-{% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="auth-card border-0 shadow-sm p-4">
-                <h2 class="auth-title mb-4">Edit Profile</h2>
-                
+<div class="dashboard-container">
+    {% set active_exam = none %}
+    {% include 'faculty/components/sidebar.html' %}
+
+    <main class="main-wrapper" id="mainWrapper" style="margin-right: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F8FAFC; padding: 2rem;">
+        <div class="animate" style="width: 100%; max-width: 500px;">
+            <div style="background: white; border-radius: 24px; padding: 2.5rem 2.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">📝</div>
+                    <h2 style="margin-bottom: 0.25rem; font-weight: 800; color: #1E293B; font-size: 1.5rem;">Edit Profile</h2>
+                    <p style="color: #64748B; font-size: 0.9rem;">Update your personal information</p>
+                </div>
+
                 <form method="POST" action="{{ url_for('faculty.edit_profile') }}">
-                    <div class="form-group mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-input" value="{{ faculty.name }}" required>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; color: #1E293B; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">Full Name</label>
+                        <input type="text" name="name" value="{{ faculty.name or '' }}" required style="width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 12px; color: #1E293B; background: white; outline: none; transition: border-color 0.3s; box-sizing: border-box; font-family: inherit;">
                     </div>
                     
-                    <div class="form-group mb-3">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-input" value="{{ faculty.email }}" required>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; color: #1E293B; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">Email Address</label>
+                        <input type="email" name="email" value="{{ faculty.email or '' }}" required style="width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 12px; color: #1E293B; background: white; outline: none; transition: border-color 0.3s; box-sizing: border-box; font-family: inherit;">
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label">Department</label>
-                        <select name="department" class="form-input" required>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; color: #1E293B; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">Department</label>
+                        <select name="department" required style="width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 12px; color: #1E293B; background: white; outline: none; transition: border-color 0.3s; box-sizing: border-box; font-family: inherit; appearance: auto;">
                             <option value="CSE" {% if faculty.department == 'CSE' %}selected{% endif %}>Computer Science (CSE)</option>
                             <option value="ECE" {% if faculty.department == 'ECE' %}selected{% endif %}>Electronics (ECE)</option>
                             <option value="MECH" {% if faculty.department == 'MECH' %}selected{% endif %}>Mechanical (MECH)</option>
@@ -30,23 +45,37 @@
                         </select>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label">Mobile Number</label>
-                        <input type="tel" name="phone" class="form-input" value="{{ faculty.phone }}">
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; color: #1E293B; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">Mobile Number</label>
+                        <input type="tel" name="phone" value="{{ faculty.phone or '' }}" placeholder="+1 234 567 8900" style="width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 12px; color: #1E293B; background: white; outline: none; transition: border-color 0.3s; box-sizing: border-box; font-family: inherit;">
                     </div>
 
-                    <div class="form-group mb-4">
-                        <label class="form-label">Birthday</label>
-                        <input type="date" name="birthday" class="form-input" value="{{ faculty.birthday }}">
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; color: #1E293B; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">Birthday</label>
+                        <input type="date" name="birthday" value="{{ faculty.birthday or '' }}" style="width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 12px; color: #1E293B; background: white; outline: none; transition: border-color 0.3s; box-sizing: border-box; font-family: inherit;">
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('faculty.my_account') }}" class="btn btn-ghost">Cancel</a>
-                        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ url_for('faculty.my_account') }}" class="schedule-btn" style="flex: 1; text-align: center; background: #F1F5F9; color: #475569; text-decoration: none; padding: 12px; border-radius: 12px; font-weight: 700;">Cancel</a>
+                        <button type="submit" class="schedule-btn" style="flex: 2; padding: 12px; border-radius: 12px; font-weight: 700; background: #4F46E5; color: white; border: none; cursor: pointer; transition: all 0.3s;">Save Changes</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
+    </main>
 </div>
-{% endblock %}
+
+<script>
+function toggleAccordion(element) {
+    element.classList.toggle('active');
+    var content = element.nextElementSibling;
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+    }
+}
+</script>
+
+</body>
+</html>
