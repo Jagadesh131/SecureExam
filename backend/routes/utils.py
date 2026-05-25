@@ -47,6 +47,10 @@ def send_email_debug(subject, recipients, body, html=None):
     """
     Debug version of send_email that returns the actual error message.
     """
+    import socket
+    old_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(5.0) # Strict 5 second timeout to prevent Gunicorn crash
+    
     try:
         mail_user = current_app.config.get('MAIL_USERNAME')
         mail_pass = current_app.config.get('MAIL_PASSWORD')
@@ -64,6 +68,8 @@ def send_email_debug(subject, recipients, body, html=None):
 
     except Exception as e:
         return False, str(e)
+    finally:
+        socket.setdefaulttimeout(old_timeout)
 
 def get_network_ip():
     """Helper to find the local network IP address."""
