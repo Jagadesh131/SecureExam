@@ -112,13 +112,15 @@
     {% endif %}
 
     <div class="sidebar-footer">
-        <div class="user-profile">
-            <div class="avatar">{{ session.get('faculty_name', 'Faculty')[0] }}</div>
-            <div class="user-info">
-                <div class="user-name">{{ session.get('faculty_name', 'Demo Faculty') }}</div>
-                <div class="user-role">Faculty Member</div>
+        <a href="{{ url_for('faculty.my_account') }}" style="text-decoration: none; color: inherit;">
+            <div class="user-profile" style="cursor: pointer;">
+                <div class="avatar">{{ session.get('faculty_name', 'Faculty')[0] }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.get('faculty_name', 'Demo Faculty') }}</div>
+                    <div class="user-role">Faculty Member</div>
+                </div>
             </div>
-        </div>
+        </a>
         <a href="{{ url_for('faculty.logout') }}" style="text-decoration:none;">
             <div class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Logout

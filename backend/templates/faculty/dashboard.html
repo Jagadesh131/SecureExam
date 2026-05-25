@@ -47,13 +47,15 @@
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-profile">
-                <img src="{{ url_for('static', filename='img/faculty_avatar.png') }}" class="user-avatar" alt="Avatar">
-                <div class="user-info">
-                    <span class="user-name">{{ session.faculty_name }}</span>
-                    <span class="user-email">Faculty Portal</span>
+            <a href="{{ url_for('faculty.my_account') }}" style="text-decoration: none; color: inherit;">
+                <div class="user-profile" style="cursor: pointer;">
+                    <img src="{{ url_for('static', filename='img/faculty_avatar.png') }}" class="user-avatar" alt="Avatar">
+                    <div class="user-info">
+                        <span class="user-name">{{ session.faculty_name }}</span>
+                        <span class="user-email">Faculty Portal</span>
+                    </div>
                 </div>
-            </div>
+            </a>
             <a href="{{ url_for('faculty.logout') }}" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
