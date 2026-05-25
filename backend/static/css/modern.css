@@ -384,3 +384,55 @@ input:focus {
 .animate {
     animation: fadeIn 0.5s ease forwards;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 1rem;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid #E5E7EB;
+        z-index: 10;
+    }
+    
+    .sidebar-logo {
+        margin-bottom: 1rem;
+        justify-content: center;
+    }
+    
+    .sidebar-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .sidebar-nav::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-item {
+        white-space: nowrap;
+        padding: 0.5rem 1rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .stats-grid, .exam-grid {
+        grid-template-columns: 1fr;
+    }
+}
