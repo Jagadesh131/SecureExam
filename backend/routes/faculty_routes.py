@@ -92,7 +92,7 @@ def force_change_password():
             flash('Password requirements not met: ' + ', '.join(errors), 'error')
             return redirect(url_for('faculty.force_change_password'))
 
-        hashed = generate_password_hash(new_pass)
+        hashed = hash_password(new_pass)
         db = get_db()
         db.execute('UPDATE faculty SET password=?, temp_flag=0 WHERE faculty_id=?',
                    (hashed, session['faculty_id']))
