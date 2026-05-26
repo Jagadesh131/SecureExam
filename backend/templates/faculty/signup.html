@@ -175,14 +175,16 @@
                 </select>
             </div>
 
-            <div class="su-group">
+            <div class="su-group" style="position: relative;">
                 <label class="su-label" for="password">Password *</label>
-                <input type="password" id="password" name="password" class="su-input" placeholder="Minimum 6 characters" required>
+                <input type="password" id="password" name="password" class="su-input" placeholder="Minimum 6 characters" required style="padding-right: 40px;">
+                <i class="fas fa-eye" onclick="togglePassword('password', this)" style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #64748B;"></i>
             </div>
 
-            <div class="su-group">
+            <div class="su-group" style="position: relative;">
                 <label class="su-label" for="confirm_password">Confirm Password *</label>
-                <input type="password" id="confirm_password" name="confirm_password" class="su-input" placeholder="Re-enter password" required>
+                <input type="password" id="confirm_password" name="confirm_password" class="su-input" placeholder="Re-enter password" required style="padding-right: 40px;">
+                <i class="fas fa-eye" onclick="togglePassword('confirm_password', this)" style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #64748B;"></i>
             </div>
 
             <button type="submit" class="su-submit">Create Account</button>
@@ -193,4 +195,19 @@
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(inputId, iconElement) {
+    var input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        iconElement.classList.remove("fa-eye");
+        iconElement.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        iconElement.classList.remove("fa-eye-slash");
+        iconElement.classList.add("fa-eye");
+    }
+}
+</script>
 {% endblock %}
