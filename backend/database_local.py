@@ -1,74 +1,7 @@
-import mysql.connector
+import sqlite3
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-
-# MySQL Configuration
-MYSQL_HOST = '127.0.0.1'
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = ''
-MYSQL_DB = 'secure_exam_db'
-
-class CustomRow:
-    """Wrapper to mimic sqlite3.Row for dict-like and tuple-like access."""
-    def __init__(self, keys, values):
-        self._keys = keys
-        self._values = values
-        
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return self._values[item]
-        elif isinstance(item, str):
-            if item in self._keys:
-                return self._values[self._keys.index(item)]
-            raise KeyError(item)
-        raise TypeError(f"Invalid argument type: {type(item)}")
-        
-    def keys(self):
-        return self._keys
-        
-    def __iter__(self):
-        return iter(self._values)
-
-class MySQLCursorWrapper:
-    """Wrapper for mysql cursor to return CustomRow objects."""
-    def __init__(self, cursor):
-        self.cursor = cursor
-        
-    def fetchone(self):
-        row = self.cursor.fetchone()
-        if not row:
-            return None
-        return CustomRow(self.cursor.column_names, row)
-        
-    def fetchall(self):
-        rows = self.cursor.fetchall()
-        return [CustomRow(self.cursor.column_names, row) for row in rows]
-        
-    @property
-    def lastrowid(self):
-        return self.cursor.lastrowid
-
-class MySQLConnWrapper:
-    """Wrapper for mysql connection to support direct execute() and ? placeholders."""
-    def __init__(self, conn):
-        self.conn = conn
-        
-    def execute(self, query, params=None):
-        cursor = self.conn.cursor()
-        # Convert sqlite ? placeholders to mysql %s
-        mysql_query = query.replace('?', '%s')
-        if params:
-            cursor.execute(mysql_query, params)
-        else:
-            cursor.execute(mysql_query)
-        return MySQLCursorWrapper(cursor)
-        
-    def commit(self):
-        self.conn.commit()
-        
-    def close(self):
-        self.conn.close()
 
 def hash_password(password):
     """Hash a password using Werkzeug scrypt."""
@@ -76,22 +9,18 @@ def hash_password(password):
 
 def get_db():
     """Create a new database connection."""
-    conn = mysql.connector.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DB
-    )
-    return MySQLConnWrapper(conn)
+    conn = sqlite3.connect('mcq_exam.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
-    """Initialize the MySQL database with the required schema."""
+    """Initialize the SQLite database with the required schema."""
     conn = get_db()
 
     # 1. Admin Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS admin (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         username VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL
     )''')
@@ -99,7 +28,7 @@ def init_db():
     # 2. Faculty Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS faculty (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         faculty_id VARCHAR(255) UNIQUE NOT NULL,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -116,7 +45,7 @@ def init_db():
     # 3. Exams Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS exams (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         exam_code VARCHAR(255) UNIQUE NOT NULL,
         exam_name VARCHAR(255) NOT NULL,
         faculty_id VARCHAR(255) NOT NULL,
@@ -132,7 +61,7 @@ def init_db():
     # 3.5. Categories Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS categories (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         exam_code VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
         color VARCHAR(20) DEFAULT '#3B82F6',
@@ -142,7 +71,7 @@ def init_db():
     # 4. Questions Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS questions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         exam_code VARCHAR(255) NOT NULL,
         question_text TEXT NOT NULL,
         option_a TEXT NOT NULL,
@@ -156,21 +85,10 @@ def init_db():
         FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
     )''')
 
-    # Ensure category_id exists if the table was created previously
-    try:
-        conn.execute("ALTER TABLE questions ADD COLUMN category_id INT NULL")
-    except Exception:
-        pass
-        
-    try:
-        conn.execute("ALTER TABLE questions ADD FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL")
-    except Exception:
-        pass
-
     # 5. Student Attempts Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS student_attempts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_name VARCHAR(255) NOT NULL,
         reg_number VARCHAR(255) NOT NULL,
         exam_code VARCHAR(255) NOT NULL,
@@ -186,7 +104,7 @@ def init_db():
     # 6. Activity Logs Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS activity_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_type VARCHAR(255),
         user_id VARCHAR(255),
         action TEXT,
@@ -196,7 +114,7 @@ def init_db():
     # 7. Backups Table
     conn.execute('''
     CREATE TABLE IF NOT EXISTS backups (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename VARCHAR(255) NOT NULL,
         size VARCHAR(255),
         created_date VARCHAR(255)
@@ -210,7 +128,7 @@ def init_db():
     
     conn.commit()
     conn.close()
-    print("[OK] Database initialized successfully with MySQL.")
+    print("[OK] Database initialized successfully with SQLite.")
 
 def log_activity(user_type, user_id, action):
     """Log system activity."""
@@ -268,7 +186,7 @@ def get_all_faculties_with_counts(search_query=''):
     else:
         faculties = db.execute(query).fetchall()
     db.close()
-    return faculties
+    return [dict(row) for row in faculties]
 
 def get_faculty_exams_with_counts(faculty_id, search_query=''):
     """Get all exams for a specific faculty with student attempt counts, searchable by name, code, or subject."""
@@ -288,7 +206,7 @@ def get_faculty_exams_with_counts(faculty_id, search_query=''):
     query += " ORDER BY e.created_date DESC"
     exams = db.execute(query, tuple(params)).fetchall()
     db.close()
-    return exams
+    return [dict(row) for row in exams]
 
 def get_all_exams_admin(search_query=''):
     """Get all exams with faculty and department details, searchable by name, code, subject, or department."""
@@ -305,7 +223,7 @@ def get_all_exams_admin(search_query=''):
     else:
         exams = db.execute(query + " ORDER BY e.created_date DESC").fetchall()
     db.close()
-    return exams
+    return [dict(row) for row in exams]
 
 def get_all_attempts_admin(search_query=''):
     """Get all student attempts across the system for admin review."""
@@ -322,7 +240,7 @@ def get_all_attempts_admin(search_query=''):
     else:
         attempts = db.execute(query + " ORDER BY s.attempt_date DESC").fetchall()
     db.close()
-    return attempts
+    return [dict(row) for row in attempts]
 
 def get_system_analytics():
     """Calculate deep analytics for the admin dashboard."""
