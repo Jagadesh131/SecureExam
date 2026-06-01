@@ -33,7 +33,12 @@
             <div class="stat-card">
                 <div>
                     <div class="stat-label">Exam Status</div>
-                    <div class="stat-value" style="color: {{ '#10B981' if exam.is_active else '#64748B' }};">{{ 'Active' if exam.is_active else 'Inactive' }}</div>
+                    <div class="stat-value" style="color: {{ '#10B981' if exam.is_active else '#64748B' }}; margin-bottom: 0.5rem;">{{ 'Active' if exam.is_active else 'Inactive' }}</div>
+                    <form method="POST" action="{{ url_for('faculty.toggle_exam', exam_code=exam.exam_code) }}">
+                        <button type="submit" class="btn" style="background: var(--gray-200); color: var(--text-color); padding: 4px 12px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer;">
+                            <i class="fas fa-power-off"></i> Toggle Status
+                        </button>
+                    </form>
                 </div>
                 <div class="stat-icon">
                     <i class="fas fa-file-signature"></i>
