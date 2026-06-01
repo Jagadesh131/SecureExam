@@ -120,11 +120,13 @@ def submit_exam(exam_code):
             score += 1
 
     percentage = round((score / total * 100), 2) if total > 0 else 0
+    from datetime import datetime
+    now_str = datetime.now().isoformat()
 
     db.execute(
-        '''INSERT INTO student_attempts (student_name, reg_number, exam_code, answers, score, total_questions, percentage)
-           VALUES (?, ?, ?, ?, ?, ?, ?)''',
-        (student_name, reg_number, exam_code, json.dumps(answers), score, total, percentage)
+        '''INSERT INTO student_attempts (student_name, reg_number, exam_code, answers, score, total_questions, percentage, attempt_date)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (student_name, reg_number, exam_code, json.dumps(answers), score, total, percentage, now_str)
     )
     db.commit()
     db.close()
