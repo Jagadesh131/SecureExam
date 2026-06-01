@@ -251,8 +251,7 @@ else:
         return f"{prefix}-{unique_part}"
 
     def check_password(hashed_password, user_password):
-        """Verify a password against its hash."""
-        if hashed_password.startswith('scrypt:'):
+        if hashed_password.startswith('scrypt:') or hashed_password.startswith('pbkdf2:'):
             return check_password_hash(hashed_password, user_password)
         import hashlib
         return hashed_password == hashlib.sha256(user_password.encode()).hexdigest()
