@@ -4,8 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 def hash_password(password):
-    """Hash a password using Werkzeug scrypt."""
-    return generate_password_hash(password)
+    """Hash a password using pbkdf2:sha256 to avoid scrypt memory errors on Windows."""
+    return generate_password_hash(password, method='pbkdf2:sha256')
 
 def get_db():
     """Create a new database connection."""
@@ -54,6 +54,8 @@ def init_db():
         is_active INT DEFAULT 0,
         instructions TEXT,
         passing_percentage INT DEFAULT 40,
+        randomize_questions INT DEFAULT 0,
+        shuffle_options INT DEFAULT 0,
         created_date VARCHAR(255),
         FOREIGN KEY (faculty_id) REFERENCES faculty (faculty_id) ON DELETE CASCADE
     )''')

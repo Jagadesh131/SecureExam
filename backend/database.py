@@ -84,8 +84,8 @@ else:
             self.conn.close()
 
     def hash_password(password):
-        """Hash a password using Werkzeug scrypt."""
-        return generate_password_hash(password)
+        """Hash a password using pbkdf2:sha256 to avoid scrypt memory errors on Windows."""
+        return generate_password_hash(password, method='pbkdf2:sha256')
 
     def get_db():
         """Create a new database connection using pure python pymysql."""
