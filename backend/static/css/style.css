@@ -964,6 +964,7 @@ tbody tr:hover {
     cursor: pointer;
     transition: all var(--transition-fast);
     font-size: 0.9375rem;
+    color: var(--text-primary);
 }
 
 .option-label:hover {
