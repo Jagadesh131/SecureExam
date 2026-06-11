@@ -13,7 +13,7 @@ ADMIN_PASSWORD = 'admin123'
 # ======================================================
 # Set these in your Cloud Provider's Environment Variables
 MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
-MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+MAIL_PORT = int(os.environ.get('MAIL_PORT', 2525))
 MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True') == 'True'
 MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'False') == 'True'
 
