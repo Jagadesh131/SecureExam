@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 from database import get_db, generate_id, hash_password, check_password
 import json
 import re
+import os
+import google.generativeai as genai
+import PyPDF2
 
 faculty_bp = Blueprint('faculty', __name__, url_prefix='/faculty')
 
@@ -876,3 +879,116 @@ def logout():
     session.pop('temp_flag', None)
     flash('Logged out successfully.', 'info')
     return redirect(url_for('faculty.login'))
+
+@faculty_bp.route('/exam/<exam_code>/generate_from_document', methods=['POST'])
+@faculty_required
+def generate_from_document(exam_code):
+    db = get_db()
+    exam = db.execute('SELECT * FROM exams WHERE exam_code = ? AND faculty_id = ?', (exam_code, session['faculty_id'])).fetchone()
+    
+    if not exam:
+        db.close()
+        return json.dumps({"error": "Exam not found or unauthorized."}), 404
+
+    if 'file' not in request.files:
+        db.close()
+        return json.dumps({"error": "No file uploaded."}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        db.close()
+        return json.dumps({"error": "No file selected."}), 400
+
+    num_easy = int(request.form.get('num_easy', 0))
+    num_medium = int(request.form.get('num_medium', 0))
+    num_hard = int(request.form.get('num_hard', 0))
+    
+    total_questions = num_easy + num_medium + num_hard
+    if total_questions == 0:
+        db.close()
+        return json.dumps({"error": "Please specify the number of questions."}), 400
+
+    try:
+        # Extract text from file
+        text_content = ""
+        if file.filename.endswith('.pdf'):
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page in pdf_reader.pages:
+                text_content += page.extract_text() + "\n"
+        elif file.filename.endswith('.csv') or file.filename.endswith('.txt'):
+            text_content = file.read().decode('utf-8', errors='ignore')
+        else:
+            db.close()
+            return json.dumps({"error": "Unsupported file format. Please upload PDF or CSV/TXT."}), 400
+
+        # AI processing
+        from config import GEMINI_API_KEY
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = f"""
+You are an expert professor. I am providing you with a document containing a bank of multiple-choice questions.
+Your task is to analyze these questions, classify their difficulty, and extract exactly the following number of questions:
+- {num_easy} Easy questions
+- {num_medium} Medium questions
+- {num_hard} Hard questions
+Total: {total_questions} questions.
+
+Document content:
+\"\"\"
+{text_content[:25000]} # Limit to roughly 25k chars to avoid token limits on huge files
+\"\"\"
+
+Return the extracted questions strictly as a JSON array of objects. Do not include markdown formatting or extra text.
+Each object MUST have these exact keys:
+"question_text" (string)
+"option_a" (string)
+"option_b" (string)
+"option_c" (string)
+"option_d" (string)
+"correct_answer" (string, strictly "A", "B", "C", or "D")
+"difficulty" (string, strictly "Easy", "Medium", or "Hard")
+"""
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        
+        # Clean up possible markdown wrappers
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+            
+        questions_data = json.loads(response_text)
+        
+        valid_count = 0
+        for q in questions_data:
+            q_text = q.get('question_text', '').strip()
+            opt_a = q.get('option_a', '').strip()
+            opt_b = q.get('option_b', '').strip()
+            opt_c = q.get('option_c', '').strip()
+            opt_d = q.get('option_d', '').strip()
+            correct = q.get('correct_answer', '').strip().upper()
+            diff = q.get('difficulty', 'Medium').strip().capitalize()
+            
+            if diff not in ['Easy', 'Medium', 'Hard']:
+                diff = 'Medium'
+                
+            if all([q_text, opt_a, opt_b, opt_c, opt_d, correct]) and correct in ['A', 'B', 'C', 'D']:
+                db.execute(
+                    'INSERT INTO questions (exam_code, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    (exam_code, q_text, opt_a, opt_b, opt_c, opt_d, correct, diff)
+                )
+                valid_count += 1
+                
+        db.commit()
+        db.close()
+        
+        return json.dumps({"success": True, "message": f"Successfully imported {valid_count} questions via AI."})
+
+    except Exception as e:
+        db.close()
+        print(f"AI Generation Error: {str(e)}")
+        return json.dumps({"error": f"AI processing failed: {str(e)}"}), 500
+
