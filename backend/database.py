@@ -112,7 +112,7 @@ else:
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # 2. Faculty Table
             conn.execute('''
@@ -129,7 +129,7 @@ else:
                 temp_flag INT DEFAULT 0,
                 reset_token VARCHAR(255),
                 token_expiry VARCHAR(255)
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # 3. Exams Table
             conn.execute('''
@@ -145,7 +145,7 @@ else:
                 passing_percentage INT DEFAULT 40,
                 created_date VARCHAR(255),
                 FOREIGN KEY (faculty_id) REFERENCES faculty (faculty_id) ON DELETE CASCADE
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # 3.5. Categories Table
             conn.execute('''
@@ -155,7 +155,7 @@ else:
                 name VARCHAR(255) NOT NULL,
                 color VARCHAR(20) DEFAULT '#3B82F6',
                 FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # 4. Questions Table
             conn.execute('''
@@ -172,7 +172,7 @@ else:
                 category_id INT NULL,
                 FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE,
                 FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # Ensure category_id exists if the table was created previously
             try:
@@ -199,7 +199,7 @@ else:
                 time_taken INT,
                 attempt_date VARCHAR(255),
                 FOREIGN KEY (exam_code) REFERENCES exams (exam_code) ON DELETE CASCADE
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # 6. Activity Logs Table
             conn.execute('''
@@ -209,7 +209,7 @@ else:
                 user_id VARCHAR(255),
                 action TEXT,
                 timestamp VARCHAR(255)
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # 7. Backups Table
             conn.execute('''
@@ -218,7 +218,7 @@ else:
                 filename VARCHAR(255) NOT NULL,
                 size VARCHAR(255),
                 created_date VARCHAR(255)
-            )''')
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')
         
             # Insert default admin if not exists
             row = conn.execute("SELECT * FROM admin WHERE username = 'admin'").fetchone()
