@@ -118,23 +118,15 @@
                 <h2 class="quick-actions-title" style="margin-top: 0;">Schedule</h2>
                 <div class="calendar-card" style="padding: 24px; text-align: center;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <button style="background: none; border: none; cursor: pointer; color: #64748B;"><i class="fas fa-chevron-left"></i></button>
-                        <div style="font-weight: 700; color: #1E293B; font-size: 16px;">June 2026</div>
-                        <button style="background: none; border: none; cursor: pointer; color: #64748B;"><i class="fas fa-chevron-right"></i></button>
+                        <button onclick="changeMonth(-1)" style="background: none; border: none; cursor: pointer; color: #64748B;"><i class="fas fa-chevron-left"></i></button>
+                        <div id="calendarMonthYear" style="font-weight: 700; color: #1E293B; font-size: 16px;"></div>
+                        <button onclick="changeMonth(1)" style="background: none; border: none; cursor: pointer; color: #64748B;"><i class="fas fa-chevron-right"></i></button>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 15px; font-size: 12px; font-weight: 600; color: #94A3B8;">
                         <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; font-size: 14px; color: #475569;">
-                        <!-- Mock Calendar Days -->
-                        <div style="color: #CBD5E1;">31</div>
-                        <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div>
-                        <div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div>
-                        <div style="background: #3B82F6; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: 600; box-shadow: 0 4px 6px rgba(59,130,246,0.3);">14</div>
-                        <div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
-                        <div>21</div><div>22</div><div>23</div><div>24</div><div>25</div><div>26</div><div>27</div>
-                        <div>28</div><div>29</div><div>30</div>
-                        <div style="color: #CBD5E1;">1</div><div style="color: #CBD5E1;">2</div><div style="color: #CBD5E1;">3</div><div style="color: #CBD5E1;">4</div>
+                    <div id="calendarDaysGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; font-size: 14px; color: #475569; min-height: 150px;">
+                        <!-- Calendar Days dynamically injected here -->
                     </div>
                 </div>
 
@@ -218,13 +210,67 @@
 <script>
     document.getElementById('createModal').addEventListener('click', (e) => { if(e.target === document.getElementById('createModal')) e.target.style.display='none' });
 
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    function renderCalendar() {
+        const monthYearDisplay = document.getElementById('calendarMonthYear');
+        const daysGrid = document.getElementById('calendarDaysGrid');
+        
+        // Arrays for display
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        monthYearDisplay.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+        
+        // Clear grid
+        daysGrid.innerHTML = '';
+        
+        // Date calculations
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+        
+        const today = new Date();
+        
+        // Previous month padding
+        for (let i = firstDay - 1; i >= 0; i--) {
+            daysGrid.innerHTML += `<div style="color: #CBD5E1;">${daysInPrevMonth - i}</div>`;
+        }
+        
+        // Current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            if (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                daysGrid.innerHTML += `<div style="background: #3B82F6; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: 600; box-shadow: 0 4px 6px rgba(59,130,246,0.3);">${i}</div>`;
+            } else {
+                daysGrid.innerHTML += `<div>${i}</div>`;
+            }
+        }
+        
+        // Next month padding to fill out 42 grid cells (6 rows)
+        const totalCells = firstDay + daysInMonth;
+        const remainingCells = 42 - totalCells;
+        for (let i = 1; i <= remainingCells; i++) {
+            daysGrid.innerHTML += `<div style="color: #CBD5E1;">${i}</div>`;
+        }
+    }
+
+    function changeMonth(step) {
+        currentMonth += step;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        } else if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    }
+
     function searchExams() {
         let input = document.getElementById('examSearchInput');
         let filter = input.value.toLowerCase();
         let cards = document.getElementsByClassName('calendar-card');
 
         for (let i = 0; i < cards.length; i++) {
-            // Skip the "No exams created yet" card if it exists
             if(cards[i].querySelector('h3') && cards[i].querySelector('h3').innerText === "No exams created yet") continue;
             
             let examName = cards[i].querySelector('h3');
@@ -243,6 +289,8 @@
             }
         }
     }
+
+    document.addEventListener('DOMContentLoaded', renderCalendar);
 </script>
 
 </body>
