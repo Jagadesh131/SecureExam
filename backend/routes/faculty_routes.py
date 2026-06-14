@@ -924,7 +924,7 @@ def generate_from_document(exam_code):
         # AI processing
         from config import GEMINI_API_KEY
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro')
         
         prompt = f"""
 You are an expert professor. I am providing you with a document containing a bank of multiple-choice questions.
