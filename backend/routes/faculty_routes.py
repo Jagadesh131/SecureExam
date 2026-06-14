@@ -924,7 +924,18 @@ def generate_from_document(exam_code):
         # AI processing
         from config import GEMINI_API_KEY
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        # Auto-discover the best available model for this specific API key
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods and 'gemini' in m.name.lower()]
+        
+        if not available_models:
+            raise Exception("No Gemini text models are available for this API key. Your API key might be an old PaLM key or restricted in your region.")
+            
+        # Prefer flash or pro if available, otherwise just pick the first one
+        preferred_model = next((m for m in available_models if 'flash' in m), 
+                          next((m for m in available_models if 'pro' in m), available_models[0]))
+        
+        current_app.logger.info(f"Dynamically selected Gemini model: {preferred_model}")
+        model = genai.GenerativeModel(preferred_model)
         
         prompt = f"""
 You are an expert professor. I am providing you with a document containing a bank of multiple-choice questions.
