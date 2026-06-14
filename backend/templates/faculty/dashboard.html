@@ -22,26 +22,26 @@
             <a href="{{ url_for('faculty.dashboard') }}" class="nav-item active">
                 <i class="fas fa-th-large"></i> Dashboard
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
                 <i class="fas fa-file-alt"></i> Exams
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
                 <i class="fas fa-question-circle"></i> Questions
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('faculty.performance_trends') }}" class="nav-item">
                 <i class="fas fa-chart-bar"></i> Analytics
             </a>
         </div>
 
         <div class="nav-section">
             <div class="nav-section-title">General Tools</div>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
                 <i class="fas fa-list"></i> All Exams
             </a>
             <a href="#" class="nav-item" onclick="document.getElementById('createModal').style.display='flex'">
                 <i class="fas fa-plus-circle"></i> Create New Exam
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('faculty.export_reports') }}" class="nav-item">
                 <i class="fas fa-book"></i> All Gradebook
             </a>
         </div>
@@ -70,7 +70,7 @@
                 <div class="exam-subtitle">Dashboard Overview</div>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center;">
-                <input type="text" placeholder="Search exam" style="padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 8px; width: 200px;">
+                <input type="text" id="examSearchInput" placeholder="Search exam" onkeyup="searchExams()" style="padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 8px; width: 200px;">
                 <button class="schedule-btn" onclick="document.getElementById('createModal').style.display='flex'">+ Create Exam</button>
             </div>
         </div>
@@ -173,6 +173,32 @@
 
 <script>
     document.getElementById('createModal').addEventListener('click', (e) => { if(e.target === document.getElementById('createModal')) e.target.style.display='none' });
+
+    function searchExams() {
+        let input = document.getElementById('examSearchInput');
+        let filter = input.value.toLowerCase();
+        let cards = document.getElementsByClassName('calendar-card');
+
+        for (let i = 0; i < cards.length; i++) {
+            // Skip the "No exams created yet" card if it exists
+            if(cards[i].querySelector('h3') && cards[i].querySelector('h3').innerText === "No exams created yet") continue;
+            
+            let examName = cards[i].querySelector('h3');
+            let examCode = cards[i].querySelector('span:nth-child(2)');
+            let subjectInfo = cards[i].querySelector('p');
+
+            if (examName || examCode || subjectInfo) {
+                let textValue = (examName ? examName.textContent || examName.innerText : "") + " " + 
+                                (examCode ? examCode.textContent || examCode.innerText : "") + " " +
+                                (subjectInfo ? subjectInfo.textContent || subjectInfo.innerText : "");
+                if (textValue.toLowerCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+    }
 </script>
 
 </body>
