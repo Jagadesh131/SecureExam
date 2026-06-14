@@ -591,6 +591,25 @@ def performance_trends():
     return render_template('faculty/performance_trends.html', exams=exams)
 
 
+@faculty_bp.route('/exams')
+@faculty_required
+def all_exams():
+    """Dedicated page showing all exams created by the faculty."""
+    db = get_db()
+    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY created_at DESC', (session['faculty_id'],)).fetchall()
+    db.close()
+    return render_template('faculty/exams_list.html', exams=exams)
+
+@faculty_bp.route('/questions/select')
+@faculty_required
+def select_exam_for_questions():
+    """Hub page asking the user to select which exam they want to manage questions for."""
+    db = get_db()
+    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY created_at DESC', (session['faculty_id'],)).fetchall()
+    db.close()
+    return render_template('faculty/questions_select.html', exams=exams)
+
+
 @faculty_bp.route('/reports/export')
 @faculty_required
 def export_reports():

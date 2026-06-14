@@ -46,7 +46,7 @@
 
     <div class="nav-section">
         <div class="nav-section-title">General Tools</div>
-        <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
+        <a href="{{ url_for('faculty.all_exams') }}" class="nav-item">
             <i class="fas fa-list"></i> <span class="nav-text">All Exams</span>
         </a>
         <a href="{{ url_for('faculty.create_exam_view') }}" class="nav-item">
@@ -75,7 +75,7 @@
             <i class="fas fa-chevron-down" style="width: auto; margin: 0; font-size: 10px;"></i>
         </div>
         <div class="nav-accordion-content">
-            <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">Exam List</a>
+            <a href="{{ url_for('faculty.all_exams') }}" class="nav-item">Exam List</a>
             <a href="{{ url_for('faculty.create_exam_view') }}" class="nav-item">Create Exam</a>
         </div>
 
@@ -85,7 +85,7 @@
             <i class="fas fa-chevron-down" style="width: auto; margin: 0; font-size: 10px;"></i>
         </div>
         <div class="nav-accordion-content">
-            <a href="#" class="nav-item">Question Bank</a>
+            <a href="{{ url_for('faculty.select_exam_for_questions') }}" class="nav-item">Question Bank</a>
             <a href="#" class="nav-item">Exam Templates</a>
         </div>
 
