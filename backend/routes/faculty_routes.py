@@ -596,7 +596,7 @@ def performance_trends():
 def all_exams():
     """Dedicated page showing all exams created by the faculty."""
     db = get_db()
-    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY created_at DESC', (session['faculty_id'],)).fetchall()
+    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY id DESC', (session['faculty_id'],)).fetchall()
     db.close()
     return render_template('faculty/exams_list.html', exams=exams)
 
@@ -605,7 +605,7 @@ def all_exams():
 def select_exam_for_questions():
     """Hub page asking the user to select which exam they want to manage questions for."""
     db = get_db()
-    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY created_at DESC', (session['faculty_id'],)).fetchall()
+    exams = db.execute('SELECT * FROM exams WHERE faculty_id = ? ORDER BY id DESC', (session['faculty_id'],)).fetchall()
     db.close()
     return render_template('faculty/questions_select.html', exams=exams)
 
