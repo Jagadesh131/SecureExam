@@ -27,7 +27,7 @@ def run_e2e_tests():
     # Run pytest on the e2e directory
     try:
         subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/e2e/", "-v", "--disable-warnings"], 
+            [sys.executable, "-m", "pytest", "tests/e2e/", "-v", "--disable-warnings", "-p", "no:cacheprovider"], 
             check=False
         )
     except Exception as e:

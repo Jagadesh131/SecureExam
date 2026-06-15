@@ -60,9 +60,21 @@ def pytest_runtest_makereport(item, call):
             if len(error_msg) > 500:
                 error_msg = error_msg[:500] + "... [truncated]"
 
+        # Determine Test Category
+        test_id_upper = test_id.upper()
+        if "UNIT_" in test_id_upper or "TEST_UNIT" in item.location[0].upper():
+            category = "Unit Testing"
+        elif "AUTH_" in test_id_upper or "SQLI" in test_id_upper or "XSS" in test_id_upper:
+            category = "Validation Test"
+        elif "UI" in test_id_upper or "DASHBOARD" in test_id_upper or "RENDER" in test_id_upper:
+            category = "UI/UX Test"
+        else:
+            category = "Functional Testing"
+
         test_results.append({
             "Test ID": test_id,
             "Module": module_name,
+            "Test Category": category,
             "Test Case Description": description.strip(),
             "Status": status,
             "Execution Time (s)": round(report.duration, 2),
@@ -80,22 +92,43 @@ def pytest_sessionfinish(session, exitstatus):
         failed_tests = total_tests - passed_tests
         pass_rate = f"{(passed_tests / total_tests) * 100:.1f}%" if total_tests > 0 else "0%"
         
+        deployable_status = "READY FOR DEPLOYMENT ✅" if failed_tests == 0 and total_tests > 0 else "FAILED / DO NOT DEPLOY ❌"
+        
+        # Category metrics
+        def get_cat_metrics(cat):
+            cat_df = df[df['Test Category'] == cat]
+            t = len(cat_df)
+            p = len(cat_df[cat_df['Status'] == 'Pass'])
+            return f"{p}/{t} Passed"
+
         summary_data = {
             "Metric": [
                 "Project Title", 
                 "Execution Date", 
+                "Deployable Status",
                 "Total Test Cases", 
                 "Passed Test Cases", 
                 "Failed Test Cases", 
-                "Pass Rate"
+                "Pass Rate",
+                "-- BREAKDOWN BY CATEGORY --",
+                "Unit Testing",
+                "UI/UX Test",
+                "Functional Testing",
+                "Validation Test"
             ],
             "Value": [
                 "SecureExam - Automated E2E Testing Report",
                 time.strftime("%Y-%m-%d %H:%M:%S"),
+                deployable_status,
                 total_tests,
                 passed_tests,
                 failed_tests,
-                pass_rate
+                pass_rate,
+                "",
+                get_cat_metrics("Unit Testing"),
+                get_cat_metrics("UI/UX Test"),
+                get_cat_metrics("Functional Testing"),
+                get_cat_metrics("Validation Test")
             ]
         }
         summary_df = pd.DataFrame(summary_data)
@@ -118,10 +151,11 @@ def pytest_sessionfinish(session, exitstatus):
                 detailed_ws = writer.sheets['Detailed Results']
                 detailed_ws.column_dimensions['A'].width = 30
                 detailed_ws.column_dimensions['B'].width = 30
-                detailed_ws.column_dimensions['C'].width = 50
-                detailed_ws.column_dimensions['D'].width = 15
+                detailed_ws.column_dimensions['C'].width = 20
+                detailed_ws.column_dimensions['D'].width = 50
                 detailed_ws.column_dimensions['E'].width = 15
-                detailed_ws.column_dimensions['F'].width = 80
+                detailed_ws.column_dimensions['F'].width = 15
+                detailed_ws.column_dimensions['G'].width = 80
                 
             print(f"\nSuccessfully generated E2E Test Report at: {report_path}")
         except Exception as e:
