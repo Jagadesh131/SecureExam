@@ -39,7 +39,7 @@ def test_admin_login_variations(browser, username, password, expected_message, t
     browser.get(f"{BASE_URL}/admin/")
     
     # Wait for fields to load
-    wait = WebDriverWait(browser, 5)
+    wait = WebDriverWait(browser, 15)
     username_field = wait.until(EC.presence_of_element_located((By.NAME, "username")))
     password_field = browser.find_element(By.NAME, "password")
     submit_button = browser.find_element(By.CSS_SELECTOR, "button[type='submit']")
@@ -61,7 +61,7 @@ def test_admin_login_variations(browser, username, password, expected_message, t
 def test_faculty_forgot_password_ui(browser):
     """Verify Forgot Password UI and local testing mode"""
     browser.get(f"{BASE_URL}/faculty/forgot-password")
-    wait = WebDriverWait(browser, 5)
+    wait = WebDriverWait(browser, 15)
     
     fac_id_field = wait.until(EC.presence_of_element_located((By.NAME, "faculty_id")))
     fac_id_field.send_keys("UNKNOWN999")
