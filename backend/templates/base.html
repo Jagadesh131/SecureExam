@@ -51,7 +51,7 @@
                 setTimeout(() => {
                     alert.style.opacity = '0';
                     setTimeout(() => alert.remove(), 500);
-                }, 4000);
+                }, 10000); // Increased from 4s to 10s to prevent race conditions in E2E tests
             });
         });
     </script>
