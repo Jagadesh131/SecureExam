@@ -74,12 +74,55 @@ def pytest_sessionfinish(session, exitstatus):
     if test_results:
         df = pd.DataFrame(test_results)
         
+        # Calculate Summary Metrics
+        total_tests = len(df)
+        passed_tests = len(df[df['Status'] == 'Pass'])
+        failed_tests = total_tests - passed_tests
+        pass_rate = f"{(passed_tests / total_tests) * 100:.1f}%" if total_tests > 0 else "0%"
+        
+        summary_data = {
+            "Metric": [
+                "Project Title", 
+                "Execution Date", 
+                "Total Test Cases", 
+                "Passed Test Cases", 
+                "Failed Test Cases", 
+                "Pass Rate"
+            ],
+            "Value": [
+                "SecureExam - Automated E2E Testing Report",
+                time.strftime("%Y-%m-%d %H:%M:%S"),
+                total_tests,
+                passed_tests,
+                failed_tests,
+                pass_rate
+            ]
+        }
+        summary_df = pd.DataFrame(summary_data)
+        
         # Save to the root of the backend directory
         report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'E2E_Test_Report.xlsx'))
         
         try:
             # We use openpyxl engine automatically with pandas for .xlsx
-            df.to_excel(report_path, index=False, engine='openpyxl')
+            with pd.ExcelWriter(report_path, engine='openpyxl') as writer:
+                summary_df.to_excel(writer, sheet_name='Summary', index=False)
+                df.to_excel(writer, sheet_name='Detailed Results', index=False)
+                
+                # Optional formatting for Summary sheet
+                worksheet = writer.sheets['Summary']
+                worksheet.column_dimensions['A'].width = 25
+                worksheet.column_dimensions['B'].width = 50
+                
+                # Format Detailed Results sheet
+                detailed_ws = writer.sheets['Detailed Results']
+                detailed_ws.column_dimensions['A'].width = 30
+                detailed_ws.column_dimensions['B'].width = 30
+                detailed_ws.column_dimensions['C'].width = 50
+                detailed_ws.column_dimensions['D'].width = 15
+                detailed_ws.column_dimensions['E'].width = 15
+                detailed_ws.column_dimensions['F'].width = 80
+                
             print(f"\nSuccessfully generated E2E Test Report at: {report_path}")
         except Exception as e:
             print(f"\nFailed to generate E2E Excel Report: {e}")
