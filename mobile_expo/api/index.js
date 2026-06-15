@@ -1,14 +1,9 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// Dynamically detect server IP
+// Production Cloud API URL
 const getBaseUrl = () => {
-  if (Platform.OS === 'web') return 'http://127.0.0.1:5050/api';
-  
-  const debuggerHost = Constants.expoConfig?.hostUri?.split(':')[0];
-  if (debuggerHost) return `http://${debuggerHost}:5050/api`;
-  
-  return 'http://172.19.86.14:5050/api'; // Fallback
+  return 'https://secureexam-k7w2.onrender.com/api';
 };
 
 export const BASE_URL = getBaseUrl();

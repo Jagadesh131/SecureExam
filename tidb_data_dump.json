@@ -1,0 +1,39 @@
+{
+    "faculty": [
+        {
+            "id": 1,
+            "faculty_id": "FAC001",
+            "name": "Demo Faculty",
+            "email": "demo@university.edu",
+            "department": "Computer Science",
+            "temp_flag": 0
+        },
+        {
+            "id": 30002,
+            "faculty_id": "FAC-WZLXRO",
+            "name": "Dr.Jagadesh Sai",
+            "email": "jagadesh.0116@gmail.com",
+            "department": "Computer Science",
+            "temp_flag": 0
+        }
+    ],
+    "exams": [
+        {
+            "id": 1,
+            "exam_code": "EXAM-HBXL",
+            "exam_name": "Data Structure",
+            "faculty_id": "FAC001",
+            "subject": "DS",
+            "is_active": 0
+        },
+        {
+            "id": 30002,
+            "exam_code": "EXAM-OBA1",
+            "exam_name": "Data Structure",
+            "faculty_id": "FAC-WZLXRO",
+            "subject": "DS",
+            "is_active": 0
+        }
+    ],
+    "student_attempts": []
+}
