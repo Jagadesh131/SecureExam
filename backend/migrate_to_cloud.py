@@ -57,12 +57,7 @@ def migrate():
     for table in tables:
         print(f"\n📦 Migrating table: {table}...")
         
-        # Clear cloud table first
-        cloud_cursor.execute(f"SET FOREIGN_KEY_CHECKS=0")
-        try:
-            cloud_cursor.execute(f"TRUNCATE TABLE {table}")
-        except Exception:
-            pass
+        # Removed TRUNCATE to avoid deleting existing cloud data.
         
         # Read from local
         try:
@@ -80,7 +75,7 @@ def migrate():
         placeholders = ', '.join(['%s'] * len(columns))
         col_names = ', '.join(columns)
         
-        query = f"INSERT INTO {table} ({col_names}) VALUES ({placeholders})"
+        query = f"INSERT IGNORE INTO {table} ({col_names}) VALUES ({placeholders})"
         
         success_count = 0
         for row in rows:
