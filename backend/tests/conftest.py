@@ -37,7 +37,10 @@ def app():
     
     # Cleanup
     os.close(db_fd)
-    os.unlink(db_path)
+    try:
+        os.unlink(db_path)
+    except PermissionError:
+        pass  # Windows may hold the SQLite file open, safe to ignore during teardown
 
 @pytest.fixture()
 def client(app):
