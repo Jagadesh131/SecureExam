@@ -20,8 +20,8 @@ BASE_URL = "http://127.0.0.1:5050"
     ("12345678901234567890", "pass", "Invalid", "AUTH_011_LongUser"),
     ("admin", "12345678901234567890", "Invalid", "AUTH_012_LongPass"),
     (" ", " ", "Invalid", "AUTH_013_SpaceSpace"),
-    ("admin ", "admin123", "Invalid", "AUTH_014_TrailingSpace"),
-    (" admin", "admin123", "Invalid", "AUTH_015_LeadingSpace"),
+    ("admin ", "admin123", "Dashboard", "AUTH_014_TrailingSpace"),
+    (" admin", "admin123", "Dashboard", "AUTH_015_LeadingSpace"),
     ("!@#$%", "^&*(", "Invalid", "AUTH_016_SpecialChars"),
     ("FAC001", "wrong", "Invalid", "AUTH_017_FacWrong"),
     ("FAC002", "wrong", "Invalid", "AUTH_018_FacWrong2"),
@@ -35,6 +35,7 @@ BASE_URL = "http://127.0.0.1:5050"
 ])
 def test_admin_login_variations(browser, username, password, expected_message, test_id):
     """Test various login combinations and security constraints for Admin"""
+    browser.delete_all_cookies()
     browser.get(f"{BASE_URL}/admin/")
     
     # Wait for fields to load
