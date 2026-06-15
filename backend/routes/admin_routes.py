@@ -34,7 +34,8 @@ def authenticate():
     admin = db.execute('SELECT * FROM admin WHERE username = ?', (username,)).fetchone()
     db.close()
 
-    if admin and check_password(admin['password'], password):
+    # Enforce strict case-sensitivity for username at the application level
+    if admin and admin['username'] == username and check_password(admin['password'], password):
         session['admin_logged_in'] = True
         session['admin_id'] = admin['id']
         flash('Welcome, Admin!', 'success')
