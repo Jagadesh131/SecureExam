@@ -12,11 +12,10 @@ def run_e2e_tests():
     env["USE_OFFLINE_DB"] = "1"
     
     # We use python app.py to start it
+    # Do NOT suppress stdout/stderr so we can see if it crashes (e.g. missing modules)
     server_process = subprocess.Popen(
         [sys.executable, "app.py"],
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        env=env
     )
     
     # Wait a moment for the server to fully start
