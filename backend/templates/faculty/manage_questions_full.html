@@ -260,13 +260,18 @@
                 body: formData
             });
             
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error(`Server returned an error (Status ${response.status}). This usually means the AI took longer than 30 seconds to read the document and the connection timed out, or the file is too large.`);
+            }
+
             const result = await response.json();
             
             if (response.ok && result.success) {
                 // Reload page on success to see new questions
                 window.location.reload();
             } else {
-                throw new Error(result.error || 'Unknown error occurred during AI processing.');
+                throw new Error(result.message || result.error || 'Unknown error occurred during AI processing.');
             }
         } catch (error) {
             errorMsg.textContent = error.message;

@@ -746,7 +746,7 @@ def forgot_password():
                 masked_email = email_parts[0][0] + "***" + email_parts[0][-1] + "@" + email_parts[1]
                 flash(f'Login details have been sent to {masked_email}. Please check your inbox.', 'success')
             else:
-                flash(f'Email blocked by Cloud. Reason: {error_msg}. Your temporary password is: {new_clear_pass}', 'warning')
+                flash(f'Testing Mode Enabled: No email sent. Your temporary password is: {new_clear_pass}', 'info')
             
             db.close()
             return redirect(url_for('faculty.login'))

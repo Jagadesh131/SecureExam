@@ -4,6 +4,10 @@ from flask_cors import CORS
 from database import init_db
 import logging
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (if it exists)
+load_dotenv()
 
 """
 MCQ Examination System - Main Application Entry Point
