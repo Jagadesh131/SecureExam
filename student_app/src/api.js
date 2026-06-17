@@ -2,7 +2,7 @@
 // Configure your API Base URL here
 // For Android emulator testing local backend, use 10.0.2.2.
 // For iOS simulator, use localhost.
-const API_BASE_URL = 'http://127.0.0.1:5000/api'; 
+const API_BASE_URL = 'https://secureexam-k7w2.onrender.com/api';
 
 export const fetchExamDetails = async (examCode) => {
   try {
