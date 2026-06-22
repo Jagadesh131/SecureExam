@@ -5,11 +5,10 @@ SecureExam is a full-stack, dual-platform Examination Management System. It feat
 ---
 
 ## 🌐 Live Application Links
-> **Note:** If hosting on a cloud provider like Vercel, Render, or Heroku, replace these placeholder links with your actual URLs.
 
-- **Admin/Faculty Web Portal:** [https://secureexam-k7w2.onrender.com](https://secureexam-k7w2.onrender.com)
-- **Student Mobile App (Expo):** [Insert Expo QR Code / Link Here]
-- **Cloud Database Dashboard:** [TiDB Cloud Console]
+- **Faculty / Admin Portal:** [https://secureexam-k7w2.onrender.com](https://secureexam-k7w2.onrender.com)
+- **Student Mobile App (Web Version):** [https://secureexam-k7w2.onrender.com/student/](https://secureexam-k7w2.onrender.com/student/)
+- **Student Mobile App (Android APK):** Download via Expo EAS Build.
 
 ---
 
