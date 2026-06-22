@@ -37,6 +37,7 @@
       ]
     ],
     "experiments": {
+      "baseUrl": "/SecureExam",
       "typedRoutes": true,
       "reactCompiler": true
     }
