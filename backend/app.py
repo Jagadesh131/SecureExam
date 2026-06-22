@@ -66,6 +66,17 @@ def create_app():
     def index_redirect():
         return redirect(url_for('welcome'))
 
+    from flask import send_from_directory
+    @app.route('/student')
+    @app.route('/student/')
+    @app.route('/student/<path:path>')
+    def serve_student_app(path='index.html'):
+        student_dist_dir = os.path.join(app.root_path, 'static', 'student_app')
+        if path != "" and os.path.exists(os.path.join(student_dist_dir, path)):
+            return send_from_directory(student_dist_dir, path)
+        else:
+            return send_from_directory(student_dist_dir, 'index.html')
+
     # Global Error Handlers
     @app.errorhandler(404)
     def page_not_found(e):
