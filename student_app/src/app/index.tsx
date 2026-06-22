@@ -73,6 +73,22 @@ export default function LoginScreen() {
             <Text style={styles.buttonText}>Join Exam</Text>
           )}
         </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, { marginTop: 15, backgroundColor: '#4f46e5' }]} 
+          onPress={() => {
+            // Using window.location.href for web or Linking for mobile
+            try {
+              window.open('https://secureexam-k7w2.onrender.com', '_blank');
+            } catch (e) {
+              import('react-native').then(({ Linking }) => {
+                Linking.openURL('https://secureexam-k7w2.onrender.com');
+              });
+            }
+          }}
+        >
+          <Text style={styles.buttonText}>👩‍🏫 Faculty / Admin Portal</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
