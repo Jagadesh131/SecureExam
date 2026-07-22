@@ -28,11 +28,11 @@ jobs:
     - name: Execute Comprehensive Test Suite
       run: |
         cd backend
-        python generate_excel_report.py
+        python generate_excel_report_folders.py
         
     - name: Upload Test Report Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Comprehensive_Test_Results
-        path: backend/Comprehensive_Test_Results.xlsx
+        name: Comprehensive_Test_Reports_Folders
+        path: backend/Test_Execution_Reports/
         retention-days: 90
