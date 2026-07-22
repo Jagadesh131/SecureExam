@@ -582,22 +582,85 @@ body {
         width: 100% !important;
         height: auto !important;
         position: relative !important;
-        padding: 16px !important;
+        padding: 12px 8px !important;
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .left-sidebar .nav-section {
-        display: none; /* Hide complex nav on mobile for simplicity, or we could make them inline */
+        flex-direction: column;
+        background: #0F172A; /* Match sidebar bg */
     }
     
     .brand {
-        margin-bottom: 0;
-        width: 100%;
+        margin-bottom: 12px;
         justify-content: center;
+    }
+    
+    .nav-section-title {
+        display: none;
+    }
+    
+    .nav-section {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+        gap: 8px;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+    
+    .nav-section::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-item {
+        white-space: nowrap;
+        margin: 0;
+        padding: 8px 14px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 20px; /* Pill shape for mobile */
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .nav-item i {
+        margin-right: 6px;
+        font-size: 14px;
+    }
+    
+    .sidebar-footer {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .user-profile {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .user-info {
+        display: none; /* Hide name/email on mobile to save space, avatar is enough */
+    }
+    
+    .user-avatar {
+        margin-right: 0;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .logout-btn {
+        margin: 0;
+        width: auto;
+        padding: 8px 16px;
+        font-size: 13px;
     }
     
     .main-wrapper {
@@ -625,5 +688,20 @@ body {
     
     .exam-title {
         font-size: 22px;
+    }
+    
+    .header-meta {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+    
+    .header-meta > div:nth-child(2) {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    #examSearchInput {
+        width: 60% !important;
     }
 }
