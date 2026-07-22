@@ -667,10 +667,8 @@ def forgot_password():
         
         db = get_db()
         
-        if faculty_id:
-            faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ?', (faculty_id,)).fetchone()
-        elif email:
-            faculty = db.execute('SELECT * FROM faculty WHERE email = ?', (email,)).fetchone()
+        if faculty_id and email:
+            faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ? AND email = ?', (faculty_id, email)).fetchone()
         else:
             faculty = None
 

@@ -1,0 +1,38 @@
+name: Automated Test Execution
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  run-tests-and-generate-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas openpyxl
+
+    - name: Execute Comprehensive Test Suite
+      run: |
+        cd backend
+        python generate_excel_report.py
+        
+    - name: Upload Test Report Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Comprehensive_Test_Results
+        path: backend/Comprehensive_Test_Results.xlsx
+        retention-days: 90
