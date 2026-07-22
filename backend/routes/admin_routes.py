@@ -97,7 +97,7 @@ def add_faculty():
         body = f"Hello {name},\n\nYour faculty account has been created.\n\n" \
                f"Faculty ID: {faculty_id}\n" \
                f"Temporary Password: {config.TEMP_PASSWORD}\n\n" \
-               f"Please login at: http://{get_network_ip()}:5050{url_for('faculty.login')}\n" \
+               f"Please login at: {request.host_url.rstrip('/')}{url_for('faculty.login')}\n" \
                "You will be required to change your password on your first login."
         
         send_email(subject, [email], body)
