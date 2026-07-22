@@ -6,7 +6,7 @@
     <title>Faculty Dashboard — MCQ System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_premium.css') }}?v=4">
 </head>
 <body>
 
@@ -111,7 +111,7 @@
         </div>
 
         <!-- Two Column Layout: Calendar & Recent Exams -->
-        <div style="display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 30px;">
+        <div class="dashboard-content-grid">
             
             <!-- Left Column: Calendar -->
             <div>
@@ -150,7 +150,7 @@
                 </div>
 
                 {% if exams %}
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                <div class="recent-exams-grid">
                     {% for e in exams[:4] %} <!-- Only show 4 most recent -->
                     <div class="calendar-card" style="padding: 20px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">

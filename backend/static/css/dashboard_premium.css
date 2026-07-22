@@ -563,8 +563,25 @@ body {
     background: #F1F5F9;
 }
 
+/* Dashboard Content Grid */
+.dashboard-content-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.recent-exams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 1024px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
     .right-sidebar {
         display: none;
     }
@@ -671,6 +688,15 @@ body {
     
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .dashboard-content-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+    
+    .recent-exams-grid {
+        grid-template-columns: 1fr !important;
     }
     
     .actions-grid {
