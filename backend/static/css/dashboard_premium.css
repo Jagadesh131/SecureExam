@@ -562,3 +562,68 @@ body {
 .hamburger-btn:hover {
     background: #F1F5F9;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .right-sidebar {
+        display: none;
+    }
+    .main-wrapper {
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .left-sidebar {
+        width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+        padding: 16px !important;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .left-sidebar .nav-section {
+        display: none; /* Hide complex nav on mobile for simplicity, or we could make them inline */
+    }
+    
+    .brand {
+        margin-bottom: 0;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .main-wrapper {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding: 16px !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calendar-grid {
+        gap: 2px;
+    }
+    
+    .calendar-day {
+        font-size: 12px;
+        padding: 4px;
+    }
+    
+    .exam-title {
+        font-size: 22px;
+    }
+}
