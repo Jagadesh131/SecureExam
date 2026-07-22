@@ -796,7 +796,18 @@ def signup():
                 (faculty_id, name, email, hashed, department, phone, birthday)
             )
             db.commit()
-            flash(f'Registration successful! Your Faculty ID is: {faculty_id}', 'success')
+            
+            # Send Greeting Email with Faculty ID
+            subject = "Welcome to MCQ University Portal!"
+            body = f"Hello {name},\n\nYour faculty account has been successfully registered.\n\n" \
+                   f"Your Faculty ID is: {faculty_id}\n\n" \
+                   f"You can now use this ID and the password you created to log in to the portal.\n" \
+                   f"Login Page: {request.host_url.rstrip('/')}{url_for('faculty.login')}\n"
+            
+            from routes.utils import send_email
+            send_email(subject, [email], body)
+
+            flash(f'Registration successful! Your Faculty ID is: {faculty_id}. An email has also been sent to you.', 'success')
             return redirect(url_for('faculty.login'))
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
