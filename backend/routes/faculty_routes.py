@@ -904,16 +904,16 @@ def generate_from_document(exam_code):
     
     if not exam:
         db.close()
-        return json.dumps({"error": "Exam not found or unauthorized."}), 404
+        return current_app.response_class(response=json.dumps({"error": "Exam not found or unauthorized."}), status=404, mimetype='application/json')
 
     if 'file' not in request.files:
         db.close()
-        return json.dumps({"error": "No file uploaded."}), 400
+        return current_app.response_class(response=json.dumps({"error": "No file uploaded."}), status=400, mimetype='application/json')
 
     file = request.files['file']
     if file.filename == '':
         db.close()
-        return json.dumps({"error": "No file selected."}), 400
+        return current_app.response_class(response=json.dumps({"error": "No file selected."}), status=400, mimetype='application/json')
 
     num_easy = int(request.form.get('num_easy', 0))
     num_medium = int(request.form.get('num_medium', 0))
@@ -922,7 +922,7 @@ def generate_from_document(exam_code):
     total_questions = num_easy + num_medium + num_hard
     if total_questions == 0:
         db.close()
-        return json.dumps({"error": "Please specify the number of questions."}), 400
+        return current_app.response_class(response=json.dumps({"error": "Please specify the number of questions."}), status=400, mimetype='application/json')
 
     try:
         # Extract text from file
@@ -935,7 +935,7 @@ def generate_from_document(exam_code):
             text_content = file.read().decode('utf-8', errors='ignore')
         else:
             db.close()
-            return json.dumps({"error": "Unsupported file format. Please upload PDF or CSV/TXT."}), 400
+            return current_app.response_class(response=json.dumps({"error": "Unsupported file format. Please upload PDF or CSV/TXT."}), status=400, mimetype='application/json')
 
         # AI processing
         from config import GEMINI_API_KEY
@@ -1012,10 +1012,10 @@ Each object MUST have these exact keys:
         db.commit()
         db.close()
         
-        return json.dumps({"success": True, "message": f"Successfully imported {valid_count} questions via AI."})
+        return current_app.response_class(response=json.dumps({"success": True, "message": f"Successfully imported {valid_count} questions via AI."}), status=200, mimetype='application/json')
 
     except Exception as e:
         db.close()
         print(f"AI Generation Error: {str(e)}")
-        return json.dumps({"error": f"AI processing failed: {str(e)}"}), 500
+        return current_app.response_class(response=json.dumps({"error": f"AI processing failed: {str(e)}"}), status=500, mimetype='application/json')
 
