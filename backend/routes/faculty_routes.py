@@ -662,13 +662,12 @@ def change_password():
 @faculty_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        faculty_id = request.form.get('faculty_id', '').strip().upper()
         email = request.form.get('email', '').strip()
         
         db = get_db()
         
-        if faculty_id and email:
-            faculty = db.execute('SELECT * FROM faculty WHERE faculty_id = ? AND email = ?', (faculty_id, email)).fetchone()
+        if email:
+            faculty = db.execute('SELECT * FROM faculty WHERE email = ?', (email,)).fetchone()
         else:
             faculty = None
 
