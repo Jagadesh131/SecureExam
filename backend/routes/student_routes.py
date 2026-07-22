@@ -59,6 +59,8 @@ def start_exam(exam_code):
         flash('You have already attempted this exam.', 'error')
         return redirect(url_for('student.exam_landing', exam_code=exam_code))
 
+    import random
+    
     questions = db.execute(
         'SELECT id, question_text, option_a, option_b, option_c, option_d FROM questions WHERE exam_code = ? ORDER BY id',
         (exam_code,)
@@ -68,10 +70,31 @@ def start_exam(exam_code):
     if not questions:
         flash('This exam has no questions yet. Please contact your faculty.', 'error')
         return redirect(url_for('student.exam_landing', exam_code=exam_code))
+        
+    # Convert Row objects to dicts so we can manipulate them
+    formatted_questions = []
+    for q in questions:
+        opts = [
+            ('A', q['option_a']),
+            ('B', q['option_b']),
+            ('C', q['option_c']),
+            ('D', q['option_d'])
+        ]
+        if exam['shuffle_options']:
+            random.shuffle(opts)
+            
+        formatted_questions.append({
+            'id': q['id'],
+            'question_text': q['question_text'],
+            'options': opts
+        })
+        
+    if exam['randomize_questions']:
+        random.shuffle(formatted_questions)
 
     return render_template('student/take_exam.html',
                            exam=exam,
-                           questions=questions,
+                           questions=formatted_questions,
                            student_name=student_name,
                            reg_number=reg_number)
 

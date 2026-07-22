@@ -38,26 +38,15 @@
                         <span>{{ q.question_text }}</span>
                     </div>
                     <div class="option-group">
+                        {% for opt_val, opt_text in q.options %}
                         <label class="option-label">
-                            <input type="radio" name="q_{{ q.id }}" value="A">
-                            <span class="option-letter">A</span>
-                            <span>{{ q.option_a }}</span>
+                            <input type="radio" name="q_{{ q.id }}" value="{{ opt_val }}">
+                            <span class="option-letter">
+                                {% if loop.index == 1 %}A{% elif loop.index == 2 %}B{% elif loop.index == 3 %}C{% elif loop.index == 4 %}D{% endif %}
+                            </span>
+                            <span>{{ opt_text }}</span>
                         </label>
-                        <label class="option-label">
-                            <input type="radio" name="q_{{ q.id }}" value="B">
-                            <span class="option-letter">B</span>
-                            <span>{{ q.option_b }}</span>
-                        </label>
-                        <label class="option-label">
-                            <input type="radio" name="q_{{ q.id }}" value="C">
-                            <span class="option-letter">C</span>
-                            <span>{{ q.option_c }}</span>
-                        </label>
-                        <label class="option-label">
-                            <input type="radio" name="q_{{ q.id }}" value="D">
-                            <span class="option-letter">D</span>
-                            <span>{{ q.option_d }}</span>
-                        </label>
+                        {% endfor %}
                     </div>
                 </div>
                 {% endfor %}
