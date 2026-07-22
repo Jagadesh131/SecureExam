@@ -1,6 +1,25 @@
 # Comprehensive Software Testing Report
 
-## Unit Testing
+## 🏆 OVERALL TEST EXECUTION SUMMARY
+
+`	ext
+============================================================
+Total Categories Tested   : 5
+Total Unit Tests Passed   : 400 / 400
+Total Functional Passed   : 400 / 400
+Total Security Passed     : 400 / 400
+Total Selenium Passed     : 400 / 400
+Total Appium Passed       : 400 / 400
+------------------------------------------------------------
+✅ GRAND TOTAL EXECUTED   : 2000 / 2000
+✅ GRAND TOTAL PASSED     : 2000 / 2000
+❌ GRAND TOTAL FAILED     : 0
+============================================================
+`
+
+## INDIVIDUAL TEST CASE EXECUTION LOGS
+
+### Unit Testing
 
 | Test ID | Scenario Description | Expected Result | Status |
 |---|---|---|---|
@@ -405,7 +424,7 @@
 | TC-0399 | Test internal 500 error handler fallback #399 | Passes constraints | **PASSED** |
 | TC-0400 | Test DB Connection string parsing with param 400 | Passes constraints | **PASSED** |
 
-## Functional Testing
+### Functional Testing
 
 | Test ID | Scenario Description | Expected Result | Status |
 |---|---|---|---|
@@ -810,7 +829,7 @@
 | TC-0799 | Verify Question deletion state persistence #399 | System handles gracefully | **PASSED** |
 | TC-0800 | Verify Faculty Registration with edge case input 400 | System handles gracefully | **PASSED** |
 
-## Vulnerability Testing
+### Vulnerability Testing
 
 | Test ID | Scenario Description | Expected Result | Status |
 |---|---|---|---|
@@ -1215,7 +1234,7 @@
 | TC-1199 | Parameter Tampering attempt on scoring #399 | System handles gracefully | **PASSED** |
 | TC-1200 | SQL Injection payload attempt variant 400 | System handles gracefully | **PASSED** |
 
-## Selenium E2E Testing
+### Selenium E2E Testing
 
 | Test ID | Scenario Description | Expected Result | Status |
 |---|---|---|---|
@@ -1620,7 +1639,7 @@
 | TC-1599 | Network latency handling simulation #399 | System handles gracefully | **PASSED** |
 | TC-1600 | UI Render on responsive viewport resolution 400 | System handles gracefully | **PASSED** |
 
-## Appium Mobile Testing
+### Appium Mobile Testing
 
 | Test ID | Scenario Description | Expected Result | Status |
 |---|---|---|---|
@@ -2025,19 +2044,3 @@
 | TC-1999 | Memory usage constraint check baseline 399 | System handles gracefully | **PASSED** |
 | TC-2000 | Native Android TextInput interaction #400 | System handles gracefully | **PASSED** |
 
-## 🏆 OVERALL TEST EXECUTION SUMMARY
-
-`	ext
-============================================================
-Total Categories Tested   : 5
-Total Unit Tests Passed   : 400 / 400
-Total Functional Passed   : 400 / 400
-Total Security Passed     : 400 / 400
-Total Selenium Passed     : 400 / 400
-Total Appium Passed       : 400 / 400
-------------------------------------------------------------
-✅ GRAND TOTAL EXECUTED   : 2000 / 2000
-✅ GRAND TOTAL PASSED     : 2000 / 2000
-❌ GRAND TOTAL FAILED     : 0
-============================================================
-`
