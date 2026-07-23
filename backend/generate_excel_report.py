@@ -4,7 +4,7 @@ import os
 from openpyxl.styles import Font, PatternFill
 
 def generate_test_report():
-    print("🚀 Initializing Comprehensive Testing Suite...")
+    print("Initializing Comprehensive Testing Suite...")
     
     categories = {
         'Unit Testing': [
@@ -62,7 +62,7 @@ def generate_test_report():
     data = []
     test_id = 1
 
-    print("⚙️ Executing test simulations...")
+    print("Executing test simulations...")
     for category, templates in categories.items():
         # Generate exactly 400 test cases per category
         for i in range(1, 401):
@@ -93,14 +93,14 @@ def generate_test_report():
             })
             test_id += 1
 
-    print(f"✅ Generated {len(data)} test execution results.")
+    print(f"Generated {len(data)} test execution results.")
     
     # Create DataFrame
     df = pd.DataFrame(data)
     
     # Export to Excel with openpyxl engine to allow styling
     output_filename = 'Comprehensive_Test_Results.xlsx'
-    print(f"📊 Formatting and saving Excel report to {output_filename}...")
+    print(f"Formatting and saving Excel report to {output_filename}...")
     
     writer = pd.ExcelWriter(output_filename, engine='openpyxl')
     df.to_excel(writer, index=False, sheet_name='Test Results')
@@ -136,7 +136,7 @@ def generate_test_report():
             status_cell.font = pass_font
 
     writer.close()
-    print(f"🎉 Success! Excel report saved as {output_filename}")
+    print(f"Success! Excel report saved as {output_filename}")
 
 if __name__ == "__main__":
     generate_test_report()

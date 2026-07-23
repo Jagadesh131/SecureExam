@@ -143,6 +143,7 @@ else:
                 is_active INT DEFAULT 0,
                 instructions TEXT,
                 passing_percentage INT DEFAULT 40,
+                max_students INT DEFAULT 0,
                 created_date VARCHAR(255),
                 FOREIGN KEY (faculty_id) REFERENCES faculty (faculty_id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci''')

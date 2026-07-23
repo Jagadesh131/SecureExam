@@ -59,6 +59,14 @@ def start_exam(exam_code):
         flash('You have already attempted this exam.', 'error')
         return redirect(url_for('student.exam_landing', exam_code=exam_code))
 
+    # Check max capacity
+    if exam['max_students'] and exam['max_students'] > 0:
+        attempts_count = db.execute('SELECT COUNT(*) FROM student_attempts WHERE exam_code = ?', (exam_code,)).fetchone()[0]
+        if attempts_count >= exam['max_students']:
+            db.close()
+            flash('This exam has reached its maximum enrollment capacity.', 'error')
+            return redirect(url_for('student.exam_landing', exam_code=exam_code))
+
     import random
     
     questions = db.execute(

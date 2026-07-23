@@ -139,6 +139,11 @@
                     <label>Passing Percentage (%)</label>
                     <input type="number" name="passing_percentage" class="input-control" value="{{ exam.passing_percentage or 40 }}" min="1" max="100" required>
                 </div>
+                
+                <div class="input-group" style="margin-bottom: 24px;">
+                    <label>Maximum Students Allowed (0 for unlimited)</label>
+                    <input type="number" name="max_students" class="input-control" value="{{ exam.max_students or 0 }}" min="0" required>
+                </div>
 
                 <div class="toggle-row">
                     <div class="toggle-info">

@@ -128,6 +128,7 @@ def create_exam():
     subject = request.form.get('subject', '').strip()
     duration = request.form.get('duration', '0').strip()
     passing_percentage = request.form.get('passing_percentage', '40').strip()
+    max_students = request.form.get('max_students', '0').strip()
     instructions = request.form.get('instructions', '').strip()
 
     if not all([exam_name, subject, duration]):
@@ -141,6 +142,7 @@ def create_exam():
             return redirect(url_for('faculty.create_exam_view'))
             
         passing_percentage = int(passing_percentage)
+        max_students = int(max_students)
     except ValueError:
         flash('Invalid numeric values provided.', 'error')
         return redirect(url_for('faculty.create_exam_view'))
@@ -149,8 +151,8 @@ def create_exam():
     db = get_db()
     try:
         db.execute(
-            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration, passing_percentage, instructions) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (exam_code, exam_name, session['faculty_id'], subject, duration, passing_percentage, instructions)
+            'INSERT INTO exams (exam_code, exam_name, faculty_id, subject, duration, passing_percentage, max_students, instructions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (exam_code, exam_name, session['faculty_id'], subject, duration, passing_percentage, max_students, instructions)
         )
         db.commit()
         flash(f'Exam created! Code: {exam_code}', 'success')
@@ -252,17 +254,20 @@ def exam_settings(exam_code):
     if request.method == 'POST':
         instructions = request.form.get('instructions', '').strip()
         passing_percentage = request.form.get('passing_percentage', '40').strip()
+        max_students = request.form.get('max_students', '0').strip()
         randomize_questions = 1 if request.form.get('randomize_questions') else 0
         shuffle_options = 1 if request.form.get('shuffle_options') else 0
 
         try:
             passing_percentage = int(passing_percentage)
+            max_students = int(max_students)
         except ValueError:
             passing_percentage = 40
+            max_students = 0
 
-        db.execute('''UPDATE exams SET instructions=?, passing_percentage=?, randomize_questions=?, shuffle_options=? 
+        db.execute('''UPDATE exams SET instructions=?, passing_percentage=?, max_students=?, randomize_questions=?, shuffle_options=? 
                       WHERE exam_code=? AND faculty_id=?''',
-                   (instructions, passing_percentage, randomize_questions, shuffle_options, exam_code, session['faculty_id']))
+                   (instructions, passing_percentage, max_students, randomize_questions, shuffle_options, exam_code, session['faculty_id']))
         db.commit()
         db.close()
         flash('Exam settings saved.', 'success')
