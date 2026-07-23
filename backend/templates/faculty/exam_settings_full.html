@@ -133,6 +133,12 @@
             </div>
 
             <div class="settings-card">
+                <h3>Student Roster (Whitelist)</h3>
+                <p style="font-size: 13px; color: #64748B; margin-bottom: 12px;">Enter allowed Registration Numbers separated by commas. Leave blank to allow anyone.</p>
+                <textarea name="allowed_students" rows="4" class="input-control" placeholder="e.g. REG001, REG002">{{ exam.allowed_students or '' }}</textarea>
+            </div>
+
+            <div class="settings-card">
                 <h3>Advanced Settings</h3>
                 
                 <div class="input-group" style="margin-bottom: 24px;">

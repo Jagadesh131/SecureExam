@@ -270,6 +270,10 @@
                 <textarea name="instructions" rows="3" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" placeholder="Enter exam instructions...">{{ exam.instructions or '' }}</textarea>
             </div>
             <div style="margin-bottom: 15px;">
+                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Student Roster (Whitelist)</label>
+                <textarea name="allowed_students" rows="3" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" placeholder="e.g. REG001, REG002 (Leave blank for anyone)">{{ exam.allowed_students or '' }}</textarea>
+            </div>
+            <div style="margin-bottom: 15px;">
                 <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">Passing Percentage</label>
                 <input type="number" name="passing_percentage" value="{{ exam.passing_percentage or 40 }}" min="1" max="100" style="width:100%; padding:12px; border:1px solid #E2E8F0; border-radius:8px; box-sizing:border-box;" required>
             </div>

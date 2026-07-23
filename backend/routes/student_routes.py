@@ -67,6 +67,14 @@ def start_exam(exam_code):
             flash('This exam has reached its maximum enrollment capacity.', 'error')
             return redirect(url_for('student.exam_landing', exam_code=exam_code))
 
+    # Check Student Roster (Whitelist)
+    if exam.get('allowed_students') and exam['allowed_students'].strip():
+        allowed_list = [s.strip().upper() for s in exam['allowed_students'].split(',')]
+        if reg_number not in allowed_list:
+            db.close()
+            flash('You are not authorized to take this specific exam. Please check your Registration Number.', 'error')
+            return redirect(url_for('student.exam_landing', exam_code=exam_code))
+
     import random
     
     questions = db.execute(
