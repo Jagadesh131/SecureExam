@@ -60,7 +60,7 @@ def start_exam(exam_code):
         return redirect(url_for('student.exam_landing', exam_code=exam_code))
 
     # Check max capacity
-    if exam['max_students'] and exam['max_students'] > 0:
+    if 'max_students' in exam.keys() and exam['max_students'] and exam['max_students'] > 0:
         attempts_count = db.execute('SELECT COUNT(*) FROM student_attempts WHERE exam_code = ?', (exam_code,)).fetchone()[0]
         if attempts_count >= exam['max_students']:
             db.close()
@@ -68,7 +68,7 @@ def start_exam(exam_code):
             return redirect(url_for('student.exam_landing', exam_code=exam_code))
 
     # Check Student Roster (Whitelist)
-    if exam.get('allowed_students') and exam['allowed_students'].strip():
+    if 'allowed_students' in exam.keys() and exam['allowed_students'] and exam['allowed_students'].strip():
         allowed_list = [s.strip().upper() for s in exam['allowed_students'].split(',')]
         if reg_number not in allowed_list:
             db.close()
